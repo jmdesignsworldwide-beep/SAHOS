@@ -21,6 +21,12 @@ const cormorant = Cormorant_Garamond({
   display: 'swap',
 });
 
+// The nonce-based CSP (middleware.ts) requires per-request rendering so Next
+// can stamp the request's nonce onto its inline hydration scripts. Without
+// this, statically prerendered HTML carries nonce-less scripts that the CSP
+// blocks — freezing the page. Small pages, so the dynamic cost is negligible.
+export const dynamic = 'force-dynamic';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sahos.vercel.app';
 
 export const metadata: Metadata = {

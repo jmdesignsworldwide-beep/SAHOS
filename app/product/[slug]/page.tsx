@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getAllSlugs, getProduct, modelImages, garmentImages, PRODUCTS } from '@/lib/products';
+import { getProduct, modelImages, garmentImages, PRODUCTS } from '@/lib/products';
 import { Gallery } from '@/components/product/Gallery';
 import { BuyPanel } from '@/components/product/BuyPanel';
 import { Product360 } from '@/components/product/Product360';
@@ -8,10 +8,9 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { Footer } from '@/components/layout/Footer';
 import { FadeUp } from '@/components/motion/Reveal';
 
-// Pre-render every product at build time.
-export function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }));
-}
+// Rendered per-request so the nonce-based CSP (middleware.ts) can stamp its
+// nonce onto Next's inline scripts. Unknown slugs fall through to notFound().
+export const dynamic = 'force-dynamic';
 
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const product = getProduct(params.slug);

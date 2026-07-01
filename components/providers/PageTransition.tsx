@@ -2,17 +2,29 @@
 
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
-// Route transition overlay (spec §3.3): a panel wipes across the screen with
-// the SAHOS mark on navigation — "fashion house", never a hard cut. Framer
-// Motion's AnimatePresence keys on the pathname.
+// Route transition (spec §3.3): a content crossfade plus a dark "SAHOS" curtain
+// that sweeps on navigation — "fashion house", never a hard cut.
+//
+// Robustness: the curtain is a full-screen dark overlay. It must NEVER be
+// rendered at its covering state (scaleY:1) during SSR / first paint, or a
+// stalled/blocked client bundle would leave it frozen over the page. So on the
+// very first render it mounts already-open (initial={false} → scaleY:0, not
+// covering); it only animates from covering→open on an actual navigation.
 
 const curtain = [0.76, 0, 0.24, 1] as const;
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [reduced, setReduced] = useState(false);
+
+  // Detect a real navigation by comparing against the previously rendered path.
+  const prevPath = useRef(pathname);
+  const isNavigation = prevPath.current !== pathname;
+  useEffect(() => {
+    prevPath.current = pathname;
+  });
 
   useEffect(() => {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -33,12 +45,13 @@ export function PageTransition({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {!reduced && (
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={`curtain-${pathname}`}
             className="route-curtain"
             aria-hidden
-            initial={{ scaleY: 1 }}
+            // Covering only when arriving via navigation; open on first paint.
+            initial={isNavigation ? { scaleY: 1 } : false}
             animate={{ scaleY: 0 }}
             exit={{ scaleY: 1 }}
             transition={{ duration: 0.7, ease: curtain }}

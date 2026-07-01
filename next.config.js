@@ -2,32 +2,13 @@
 
 // ---------------------------------------------------------------------------
 // Security headers — "Fort Knox" baseline (spec §8.5). Applied to every route.
-// CSP is intentionally strict; extend the allow-lists here (never inline in
-// components) when adding a new third-party (Stripe, Supabase, fonts, etc.).
+//
+// NOTE: Content-Security-Policy is NOT set here. It requires a per-request
+// nonce (for Next.js's inline hydration scripts) and therefore lives in
+// middleware.ts. Setting a static, nonce-less CSP here blocks those inline
+// scripts and freezes the page. The headers below are static and safe here.
 // ---------------------------------------------------------------------------
-const isDev = process.env.NODE_ENV !== 'production';
-
-const ContentSecurityPolicy = [
-  "default-src 'self'",
-  // Next.js requires 'unsafe-inline' for its runtime style injection; GSAP/Framer
-  // are bundled so no external script host is needed beyond Stripe.
-  `script-src 'self' ${isDev ? "'unsafe-eval'" : ''} https://js.stripe.com`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
-  "connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.ingest.sentry.io",
-  "frame-src https://js.stripe.com https://hooks.stripe.com",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-  'upgrade-insecure-requests',
-]
-  .filter(Boolean)
-  .join('; ');
-
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: ContentSecurityPolicy },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
