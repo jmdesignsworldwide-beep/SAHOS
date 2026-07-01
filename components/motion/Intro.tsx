@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -67,19 +68,24 @@ export function Intro() {
           transition={{ duration: 0.8, ease: curtain }}
           aria-hidden
         >
-          <motion.svg width="220" height="60" viewBox="0 0 220 60" className="intro-mark">
-            <motion.text
-              x="110"
-              y="42"
-              textAnchor="middle"
-              className="intro-mark__text"
-              initial={{ opacity: 0, letterSpacing: '0.02em' }}
-              animate={{ opacity: 1, letterSpacing: '0.5em' }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-            >
-              SAHOS
-            </motion.text>
-          </motion.svg>
+          <motion.div
+            className="intro-mark"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.1, ease: 'easeOut' }}
+          >
+            <Image
+              src="/brand/sahos-logo.jpg"
+              alt="SAHOS"
+              width={360}
+              height={322}
+              priority
+              // 24KB asset in a 1.5s intro: skip the optimizer round-trip so it
+              // paints instantly instead of arriving late.
+              unoptimized
+              className="intro-logo"
+            />
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

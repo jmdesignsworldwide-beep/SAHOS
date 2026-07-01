@@ -220,16 +220,17 @@ a {
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: #ffffff;
+  background: #000000; /* matches the gold-on-black logo */
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.intro-mark__text {
-  fill: #1a1a18;
-  font-family: var(--font-jost), sans-serif;
-  font-size: 20px;
-  font-weight: 300;
+.intro-logo {
+  width: clamp(190px, 42vw, 360px);
+  height: auto;
+  /* the logo JPEG has a solid black background; `screen` drops the black so
+     only the gold mark shows, seamless over the black overlay */
+  mix-blend-mode: screen;
 }
 
 /* =========================================================================
