@@ -28,15 +28,27 @@ cross join (values ('XS'::size_code), ('S'), ('M'), ('L')) as s(size)
 on conflict (product_id, size) do nothing;
 
 -- Model + garment image rows (paths mirror /public/products/<slug>/...).
+-- The `type` values are cast to the product_image_type enum (Postgres does not
+-- implicitly cast text → enum in INSERT ... SELECT). Guarded with NOT EXISTS so
+-- re-running the seed never creates duplicate image rows.
 insert into product_images (product_id, url, type, position, alt)
-select p.id, '/products/' || p.slug || '/model-1.jpg', 'model', 1, p.name || ' — look 1' from products p
-union all
-select p.id, '/products/' || p.slug || '/model-2.jpg', 'model', 2, p.name || ' — look 2' from products p
-union all
-select p.id, '/products/' || p.slug || '/model-3.jpg', 'model', 3, p.name || ' — look 3' from products p
-union all
-select p.id, '/products/' || p.slug || '/garment-front.jpg', 'garment_360', 1, p.name || ' — front' from products p
-union all
-select p.id, '/products/' || p.slug || '/garment-side.jpg', 'garment_360', 2, p.name || ' — side' from products p
-union all
-select p.id, '/products/' || p.slug || '/garment-back.jpg', 'garment_360', 3, p.name || ' — back' from products p;
+select
+  p.id,
+  '/products/' || p.slug || img.file,
+  img.type::product_image_type,
+  img.position,
+  p.name || img.suffix
+from products p
+cross join (values
+  ('/model-1.jpg',       'model',       1, ' — look 1'),
+  ('/model-2.jpg',       'model',       2, ' — look 2'),
+  ('/model-3.jpg',       'model',       3, ' — look 3'),
+  ('/garment-front.jpg', 'garment_360', 1, ' — front'),
+  ('/garment-side.jpg',  'garment_360', 2, ' — side'),
+  ('/garment-back.jpg',  'garment_360', 3, ' — back')
+) as img(file, type, position, suffix)
+where not exists (
+  select 1 from product_images x
+  where x.product_id = p.id
+    and x.url = '/products/' || p.slug || img.file
+);
