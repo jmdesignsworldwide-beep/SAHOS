@@ -26,6 +26,14 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.supabase.co' },
     ],
   },
+  experimental: {
+    // The product route scans public/products/<slug>/ with fs to auto-detect
+    // model-N.jpg photos. On Vercel those public files must be traced into the
+    // route's serverless function so fs.existsSync can see them at runtime.
+    outputFileTracingIncludes: {
+      '/product/[slug]': ['./public/products/**/*'],
+    },
+  },
   async headers() {
     return [
       {

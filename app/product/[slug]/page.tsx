@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getProduct, modelImages, garmentImages, PRODUCTS } from '@/lib/products';
+import { getModelImages } from '@/lib/gallery';
 import { Gallery } from '@/components/product/Gallery';
 import { BuyPanel } from '@/components/product/BuyPanel';
 import { Product360 } from '@/components/product/Product360';
@@ -25,7 +26,11 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const product = getProduct(params.slug);
   if (!product) notFound();
 
-  const gallery = modelImages(product);
+  // Auto-detect model-1.jpg … model-10.jpg on disk; show only what exists.
+  // Fall back to the static placeholder set only when no photos are uploaded
+  // yet, so the gallery is never an empty column pre-launch.
+  const detected = getModelImages(product.slug, product.name);
+  const gallery = detected.length > 0 ? detected : modelImages(product);
   const frames = garmentImages(product).map((g) => ({ url: g.url, alt: g.alt }));
   const related = PRODUCTS.filter((p) => p.slug !== product.slug).slice(0, 3);
 
