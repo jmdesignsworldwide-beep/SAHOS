@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getProduct, modelImages, garmentImages, PRODUCTS } from '@/lib/products';
-import { getModelImages } from '@/lib/gallery';
+import { getModelImages, getGarmentImages } from '@/lib/gallery';
 import { Gallery } from '@/components/product/Gallery';
 import { BuyPanel } from '@/components/product/BuyPanel';
 import { Product360 } from '@/components/product/Product360';
@@ -31,7 +31,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   // yet, so the gallery is never an empty column pre-launch.
   const detected = getModelImages(product.slug, product.name);
   const gallery = detected.length > 0 ? detected : modelImages(product);
-  const frames = garmentImages(product).map((g) => ({ url: g.url, alt: g.alt }));
+
+  // 360 frames: same extension-flexible detection (garment-front/side/back);
+  // fall back to the static set only when nothing is uploaded yet.
+  const detectedFrames = getGarmentImages(product.slug, product.name);
+  const garmentList = detectedFrames.length > 0 ? detectedFrames : garmentImages(product);
+  const frames = garmentList.map((g) => ({ url: g.url, alt: g.alt }));
   const related = PRODUCTS.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   return (
