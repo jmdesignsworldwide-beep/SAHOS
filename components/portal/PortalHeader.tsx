@@ -9,6 +9,7 @@ export function PortalHeader() {
         SAHOS<span>· Portal</span>
       </Link>
       <nav className="phead__nav">
+        <Link href="/portal/pedidos">Pedidos</Link>
         <Link href="/portal/productos">Productos</Link>
         <Link href="/portal/cuenta">Cuenta</Link>
         <form action={signOutAction}>

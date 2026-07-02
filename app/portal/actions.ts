@@ -171,6 +171,40 @@ export async function deleteProductAction(formData: FormData) {
 }
 
 // --------------------------------------------------------------------------
+// Orders — fulfillment only (payment status is owned by the Stripe webhook)
+// --------------------------------------------------------------------------
+const FULFILLMENT = ['new', 'preparing', 'shipped', 'delivered', 'cancelled'] as const;
+
+export async function updateFulfillmentAction(formData: FormData): Promise<ActionState> {
+  await requireUser();
+  const supabase = createSSRClient();
+
+  const id = str(formData.get('order_id'), 64);
+  const status = str(formData.get('fulfillment_status'), 20) as (typeof FULFILLMENT)[number];
+  if (!id) return { error: 'Falta el pedido.' };
+  if (!FULFILLMENT.includes(status)) return { error: 'Estado inválido.' };
+
+  const tracking = str(formData.get('tracking_number'), 120) || null;
+  const courier = str(formData.get('courier'), 60) || null;
+
+  const patch: Record<string, unknown> = {
+    fulfillment_status: status,
+    tracking_number: tracking,
+    courier,
+    updated_at: new Date().toISOString(),
+  };
+  if (status === 'shipped') patch.shipped_at = new Date().toISOString();
+
+  const { error } = await supabase.from('orders').update(patch).eq('id', id);
+  if (error) return { error: `No se pudo actualizar: ${error.message}` };
+
+  revalidatePath('/portal/pedidos');
+  revalidatePath(`/portal/pedidos/${id}`);
+  revalidatePath('/portal/dashboard');
+  return { ok: true };
+}
+
+// --------------------------------------------------------------------------
 // Photos
 // --------------------------------------------------------------------------
 export async function uploadImageAction(formData: FormData): Promise<ActionState> {
