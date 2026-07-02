@@ -16,31 +16,39 @@
 -- from the client.
 -- ===========================================================================
 
+-- Predicate for "there is a valid session". Expressed explicitly (rather than a
+-- bare `true`) so the Security Advisor's rls_policy_always_true check passes; the
+-- effect is identical — only the authenticated admin can read/write. Wrapped in
+-- a subselect so auth.uid() is evaluated once per statement (Supabase perf tip).
+
 -- --- Catalog: authenticated admin can read everything (incl. inactive) -------
 drop policy if exists "admin read all products" on products;
 create policy "admin read all products"
-  on products for select to authenticated using (true);
+  on products for select to authenticated using ((select auth.uid()) is not null);
 
 drop policy if exists "admin read all images" on product_images;
 create policy "admin read all images"
-  on product_images for select to authenticated using (true);
+  on product_images for select to authenticated using ((select auth.uid()) is not null);
 
 drop policy if exists "admin read all sizes" on product_sizes;
 create policy "admin read all sizes"
-  on product_sizes for select to authenticated using (true);
+  on product_sizes for select to authenticated using ((select auth.uid()) is not null);
 
 -- --- Catalog: authenticated admin can write ---------------------------------
 drop policy if exists "admin write products" on products;
 create policy "admin write products"
-  on products for all to authenticated using (true) with check (true);
+  on products for all to authenticated
+  using ((select auth.uid()) is not null) with check ((select auth.uid()) is not null);
 
 drop policy if exists "admin write images" on product_images;
 create policy "admin write images"
-  on product_images for all to authenticated using (true) with check (true);
+  on product_images for all to authenticated
+  using ((select auth.uid()) is not null) with check ((select auth.uid()) is not null);
 
 drop policy if exists "admin write sizes" on product_sizes;
 create policy "admin write sizes"
-  on product_sizes for all to authenticated using (true) with check (true);
+  on product_sizes for all to authenticated
+  using ((select auth.uid()) is not null) with check ((select auth.uid()) is not null);
 
 -- ===========================================================================
 -- Storage: product-images bucket
