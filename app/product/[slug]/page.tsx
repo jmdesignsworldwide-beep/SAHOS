@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getProduct, modelImages, garmentImages, PRODUCTS } from '@/lib/products';
+import { getProduct, modelImages, garmentImages } from '@/lib/products';
 import { getModelImages, getGarmentImages } from '@/lib/gallery';
+import { fetchProductBySlug, fetchAllProducts } from '@/lib/catalog';
 import { Gallery } from '@/components/product/Gallery';
 import { BuyPanel } from '@/components/product/BuyPanel';
 import { Product360 } from '@/components/product/Product360';
@@ -13,8 +14,8 @@ import { FadeUp } from '@/components/motion/Reveal';
 // nonce onto Next's inline scripts. Unknown slugs fall through to notFound().
 export const dynamic = 'force-dynamic';
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const product = getProduct(params.slug);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const product = (await fetchProductBySlug(params.slug)) ?? getProduct(params.slug);
   if (!product) return { title: 'Not found' };
   return {
     title: `${product.name} — ${product.subtitle}`,
@@ -22,22 +23,34 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  const product = getProduct(params.slug);
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+  // Source of truth: Supabase (product_images). Falls back to fs-detected files,
+  // then the static placeholder set — so the store renders in every state.
+  const dbProduct = await fetchProductBySlug(params.slug);
+  const product = dbProduct ?? getProduct(params.slug);
   if (!product) notFound();
 
-  // Auto-detect model-1.jpg … model-10.jpg on disk; show only what exists.
-  // Fall back to the static placeholder set only when no photos are uploaded
-  // yet, so the gallery is never an empty column pre-launch.
-  const detected = getModelImages(product.slug, product.name);
-  const gallery = detected.length > 0 ? detected : modelImages(product);
+  const staticFallback = getProduct(product.slug) ?? product;
 
-  // 360 frames: same extension-flexible detection (garment-front/side/back);
-  // fall back to the static set only when nothing is uploaded yet.
-  const detectedFrames = getGarmentImages(product.slug, product.name);
-  const garmentList = detectedFrames.length > 0 ? detectedFrames : garmentImages(product);
+  const dbModel = dbProduct ? modelImages(dbProduct) : [];
+  const gallery =
+    dbModel.length > 0
+      ? dbModel
+      : getModelImages(product.slug, product.name).length > 0
+        ? getModelImages(product.slug, product.name)
+        : modelImages(staticFallback);
+
+  const dbGarment = dbProduct ? garmentImages(dbProduct) : [];
+  const garmentList =
+    dbGarment.length > 0
+      ? dbGarment
+      : getGarmentImages(product.slug, product.name).length > 0
+        ? getGarmentImages(product.slug, product.name)
+        : garmentImages(staticFallback);
   const frames = garmentList.map((g) => ({ url: g.url, alt: g.alt }));
-  const related = PRODUCTS.filter((p) => p.slug !== product.slug).slice(0, 3);
+
+  const all = await fetchAllProducts();
+  const related = all.filter((p) => p.slug !== product.slug).slice(0, 3);
 
   return (
     <>
@@ -64,16 +77,18 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         )}
 
         {/* You may also like */}
-        <section className="related">
-          <FadeUp as="h2" className="related__title">
-            You may also like
-          </FadeUp>
-          <div className="pgrid">
-            {related.map((p, i) => (
-              <ProductCard key={p.slug} product={p} index={i} />
-            ))}
-          </div>
-        </section>
+        {related.length > 0 && (
+          <section className="related">
+            <FadeUp as="h2" className="related__title">
+              You may also like
+            </FadeUp>
+            <div className="pgrid">
+              {related.map((p, i) => (
+                <ProductCard key={p.slug} product={p} index={i} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <Footer />

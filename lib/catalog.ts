@@ -1,7 +1,73 @@
 import 'server-only';
 import { getServiceClient } from '@/lib/supabase/server';
+import { getPublicClient } from '@/lib/supabase/public';
 import { PRODUCTS, getProduct as staticProduct } from '@/lib/products';
-import type { Product, Size } from '@/lib/types';
+import type { Product, ProductImage, Size } from '@/lib/types';
+
+// Columns pulled for a full public product view.
+const PRODUCT_SELECT =
+  'slug,name,subtitle,description,color,factory_ref,price_cents,currency,position,active,' +
+  'product_images(url,type,position,alt),product_sizes(size,stock)';
+
+// Map a Supabase row to the shared Product shape. `details` (the Details
+// accordion bullets) are not portal-managed, so they come from the static
+// catalog by slug — empty for pieces created in the portal.
+function mapRow(row: any): Product {
+  const images: ProductImage[] = (row.product_images ?? [])
+    .map((i: any) => ({
+      url: i.url as string,
+      type: i.type as ProductImage['type'],
+      position: i.position ?? 0,
+      alt: (i.alt as string) ?? row.name,
+    }))
+    .sort((a: ProductImage, b: ProductImage) => a.position - b.position);
+
+  return {
+    slug: row.slug,
+    name: row.name,
+    subtitle: row.subtitle ?? '',
+    description: row.description ?? '',
+    details: staticProduct(row.slug)?.details ?? [],
+    color: row.color ?? '',
+    factoryRef: row.factory_ref ?? '',
+    priceCents: row.price_cents ?? null,
+    currency: row.currency ?? 'usd',
+    position: row.position ?? 0,
+    images,
+    sizes: (row.product_sizes ?? []).map((s: any) => ({ size: s.size as Size, stock: s.stock ?? 0 })),
+  };
+}
+
+/**
+ * All active products for the public store, from Supabase (source of truth).
+ * Falls back to the static catalog if Supabase is not configured, errors, or is
+ * empty — so the store always renders.
+ */
+export async function fetchAllProducts(): Promise<Product[]> {
+  const supabase = getPublicClient();
+  if (!supabase) return PRODUCTS;
+  const { data, error } = await supabase
+    .from('products')
+    .select(PRODUCT_SELECT)
+    .eq('active', true)
+    .order('position');
+  if (error || !data || data.length === 0) return PRODUCTS;
+  return data.map(mapRow).sort((a, b) => a.position - b.position);
+}
+
+/** One active product by slug (public store). Null if not found in the DB. */
+export async function fetchProductBySlug(slug: string): Promise<Product | null> {
+  const supabase = getPublicClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('products')
+    .select(PRODUCT_SELECT)
+    .eq('slug', slug)
+    .eq('active', true)
+    .maybeSingle();
+  if (error || !data) return null;
+  return mapRow(data);
+}
 
 // Authoritative, server-side catalog access. Prefers live Supabase data when
 // configured; otherwise falls back to the static catalog so the site works

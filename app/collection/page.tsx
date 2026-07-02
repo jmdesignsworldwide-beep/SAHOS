@@ -1,17 +1,20 @@
 import type { Metadata } from 'next';
-import { PRODUCTS } from '@/lib/products';
+import { fetchAllProducts } from '@/lib/catalog';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Footer } from '@/components/layout/Footer';
 import { FadeUp } from '@/components/motion/Reveal';
+
+// Reflect portal edits per request (source of truth: Supabase).
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Collection',
   description: 'The Marilyn Collection — five pieces. Soft glamour, made to be seen.',
 };
 
-// Collection index (spec §4.2): a clean grid of the five pieces. No filters —
-// there are five. Reveals stagger in on scroll.
-export default function CollectionPage() {
+// Collection index (spec §4.2): a clean grid of the pieces. Reveals stagger in.
+export default async function CollectionPage() {
+  const products = await fetchAllProducts();
   return (
     <>
       <header className="page-head">
@@ -25,7 +28,7 @@ export default function CollectionPage() {
 
       <main className="collection">
         <div className="pgrid">
-          {PRODUCTS.map((product, i) => (
+          {products.map((product, i) => (
             <ProductCard key={product.slug} product={product} index={i} />
           ))}
         </div>

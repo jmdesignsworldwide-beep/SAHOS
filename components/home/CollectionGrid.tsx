@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { PRODUCTS } from '@/lib/products';
 import { ProductCard } from '@/components/product/ProductCard';
 import { FadeUp } from '@/components/motion/Reveal';
+import type { Product } from '@/lib/types';
 
-// The five pieces (spec §4.1). A clean grid; each card reveals on scroll.
-export function CollectionGrid() {
+// The pieces (spec §4.1). A clean grid; each card reveals on scroll. Products
+// are passed from the server (Supabase) so portal edits appear here too.
+export function CollectionGrid({ products = PRODUCTS }: { products?: Product[] }) {
   return (
     <section className="collection" id="collection">
       <div className="collection__head">
@@ -15,13 +17,13 @@ export function CollectionGrid() {
         </FadeUp>
         <FadeUp as="div" delay={0.05}>
           <Link href="/collection" className="link-underline label">
-            View all — 5 pieces
+            View all — {products.length} pieces
           </Link>
         </FadeUp>
       </div>
 
       <div className="pgrid">
-        {PRODUCTS.map((product, i) => (
+        {products.map((product, i) => (
           <ProductCard key={product.slug} product={product} index={i} />
         ))}
       </div>

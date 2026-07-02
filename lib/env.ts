@@ -11,4 +11,6 @@ export const env = {
 };
 
 export const hasSupabase = () => Boolean(env.supabaseUrl && env.supabaseServiceRole);
+/** Public (anon) Supabase access — enough to read the catalog and run auth. */
+export const hasSupabasePublic = () => Boolean(env.supabaseUrl && env.supabaseAnonKey);
 export const hasStripe = () => Boolean(env.stripeSecret);
