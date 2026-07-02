@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Product, Size } from '@/lib/types';
+import { isSizeAvailable, type Product, type Size } from '@/lib/types';
 import { formatPrice } from '@/lib/format';
 import { swatchFor } from '@/lib/colors';
 import { modelImages } from '@/lib/products';
@@ -74,7 +74,7 @@ export function BuyPanel({ product }: { product: Product }) {
               <button
                 key={s.size}
                 className={`size-btn ${size === s.size ? 'is-active' : ''}`}
-                disabled={s.stock <= 0}
+                disabled={!isSizeAvailable(s)}
                 onClick={() => {
                   setSize(s.size);
                   setError(false);
