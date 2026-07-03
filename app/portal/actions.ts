@@ -86,72 +86,84 @@ export async function changePasswordAction(_prev: ActionState, formData: FormDat
 // --------------------------------------------------------------------------
 // Products
 // --------------------------------------------------------------------------
-export async function saveProductAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireUser();
-  const supabase = createSSRClient();
+export interface SaveResult extends ActionState {
+  id?: string;
+  isNew?: boolean;
+}
 
-  const id = str(formData.get('id'), 64) || null;
-  const name = str(formData.get('name'), 120);
-  if (!name) return { error: 'El nombre es obligatorio.' };
+// Called directly from the client (useTransition), NOT via useFormState, and it
+// returns a result instead of redirect()-ing. The whole body is guarded so any
+// failure surfaces as a clean inline message — never an uncaught throw that
+// React renders as "Application error: a client-side exception".
+export async function saveProductAction(formData: FormData): Promise<SaveResult> {
+  try {
+    await requireUser();
+    const supabase = createSSRClient();
 
-  const subtitle = str(formData.get('subtitle'), 160);
-  const description = str(formData.get('description'), 4000);
-  const color = str(formData.get('color'), 60);
-  const factoryRef = str(formData.get('factory_ref'), 60);
-  const active = formData.get('active') === 'on';
+    const id = str(formData.get('id'), 64) || null;
+    const name = str(formData.get('name'), 120);
+    if (!name) return { error: 'El nombre es obligatorio.' };
 
-  // price in dollars → cents; empty allowed (price on request)
-  const priceRaw = str(formData.get('price'), 20);
-  let priceCents: number | null = null;
-  if (priceRaw) {
-    const n = Number(priceRaw.replace(/[^0-9.]/g, ''));
-    if (!Number.isFinite(n) || n < 0) return { error: 'Precio inválido.' };
-    priceCents = Math.round(n * 100);
-  }
+    const subtitle = str(formData.get('subtitle'), 160);
+    const description = str(formData.get('description'), 4000);
+    const color = str(formData.get('color'), 60);
+    const factoryRef = str(formData.get('factory_ref'), 60);
+    const active = formData.get('active') === 'on';
 
-  const slug = (str(formData.get('slug'), 60) || slugify(name)) || `pieza-${Date.now()}`;
-
-  const payload = {
-    name,
-    slug,
-    subtitle,
-    description,
-    color,
-    factory_ref: factoryRef,
-    price_cents: priceCents,
-    active,
-  };
-
-  let productId = id;
-  if (id) {
-    const { error } = await supabase.from('products').update(payload).eq('id', id);
-    if (error) return { error: `No se pudo guardar: ${error.message}` };
-  } else {
-    const { data, error } = await supabase
-      .from('products')
-      .insert({ ...payload, position: 999 })
-      .select('id')
-      .single();
-    if (error) return { error: `No se pudo crear: ${error.message}` };
-    productId = data.id;
-  }
-
-  // sizes: checkbox `size_XS` (available) + `stock_XS` (qty)
-  for (const size of SIZES) {
-    const available = formData.get(`size_${size}`) === 'on';
-    const stock = Math.max(0, Number(str(formData.get(`stock_${size}`), 8)) || 0);
-    if (available) {
-      await supabase.from('product_sizes').upsert(
-        { product_id: productId, size, stock },
-        { onConflict: 'product_id,size' }
-      );
-    } else {
-      await supabase.from('product_sizes').delete().eq('product_id', productId).eq('size', size);
+    // price in dollars → cents; empty allowed (price on request)
+    const priceRaw = str(formData.get('price'), 20);
+    let priceCents: number | null = null;
+    if (priceRaw) {
+      const n = Number(priceRaw.replace(/[^0-9.]/g, ''));
+      if (!Number.isFinite(n) || n < 0) return { error: 'Precio inválido.' };
+      priceCents = Math.round(n * 100);
     }
-  }
 
-  revalidateStore(slug);
-  redirect(`/portal/productos/${productId}?saved=1`);
+    const slug = (str(formData.get('slug'), 60) || slugify(name)) || `pieza-${Date.now()}`;
+    const payload = {
+      name,
+      slug,
+      subtitle,
+      description,
+      color,
+      factory_ref: factoryRef,
+      price_cents: priceCents,
+      active,
+    };
+
+    let productId = id;
+    if (id) {
+      const { error } = await supabase.from('products').update(payload).eq('id', id);
+      if (error) return { error: `No se pudo guardar: ${error.message}` };
+    } else {
+      const { data, error } = await supabase
+        .from('products')
+        .insert({ ...payload, position: 999 })
+        .select('id')
+        .single();
+      if (error) return { error: `No se pudo crear: ${error.message}` };
+      productId = data.id;
+    }
+
+    // sizes: checkbox `size_XS` (available) + `stock_XS` (qty)
+    for (const size of SIZES) {
+      const available = formData.get(`size_${size}`) === 'on';
+      const stock = Math.max(0, Number(str(formData.get(`stock_${size}`), 8)) || 0);
+      if (available) {
+        const { error } = await supabase
+          .from('product_sizes')
+          .upsert({ product_id: productId, size, stock }, { onConflict: 'product_id,size' });
+        if (error) return { error: `No se pudieron guardar las tallas: ${error.message}` };
+      } else {
+        await supabase.from('product_sizes').delete().eq('product_id', productId).eq('size', size);
+      }
+    }
+
+    revalidateStore(slug);
+    return { ok: true, id: productId ?? undefined, isNew: !id };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo guardar. Inténtalo de nuevo.' };
+  }
 }
 
 export async function deleteProductAction(formData: FormData) {
@@ -208,50 +220,54 @@ export async function updateFulfillmentAction(formData: FormData): Promise<Actio
 // Photos
 // --------------------------------------------------------------------------
 export async function uploadImageAction(formData: FormData): Promise<ActionState> {
-  await requireUser();
-  const supabase = createSSRClient();
+  try {
+    await requireUser();
+    const supabase = createSSRClient();
 
-  const productId = str(formData.get('product_id'), 64);
-  const type = str(formData.get('type'), 20);
-  const file = formData.get('file');
-  if (!productId) return { error: 'Falta el producto.' };
-  if (type !== 'model' && type !== 'garment_360') return { error: 'Tipo de foto inválido.' };
-  if (!(file instanceof File) || file.size === 0) return { error: 'Selecciona una imagen.' };
-  if (file.size > MAX_UPLOAD_BYTES) return { error: 'La imagen supera el máximo de 10MB.' };
+    const productId = str(formData.get('product_id'), 64);
+    const type = str(formData.get('type'), 20);
+    const file = formData.get('file');
+    if (!productId) return { error: 'Falta el producto.' };
+    if (type !== 'model' && type !== 'garment_360') return { error: 'Tipo de foto inválido.' };
+    if (!(file instanceof File) || file.size === 0) return { error: 'Selecciona una imagen.' };
+    if (file.size > MAX_UPLOAD_BYTES) return { error: 'La imagen supera el máximo de 10MB.' };
 
-  const ext = ALLOWED_MIME[file.type];
-  if (!ext) return { error: 'Formato no permitido. Usa JPG, PNG o WebP.' };
+    const ext = ALLOWED_MIME[file.type];
+    if (!ext) return { error: 'Formato no permitido. Usa JPG, PNG o WebP.' };
 
-  // model galleries cap at 10 photos
-  const { count } = await supabase
-    .from('product_images')
-    .select('id', { count: 'exact', head: true })
-    .eq('product_id', productId)
-    .eq('type', type);
-  if (type === 'model' && (count ?? 0) >= 10) return { error: 'Máximo 10 fotos de modelo por pieza.' };
+    // model galleries cap at 10 photos
+    const { count } = await supabase
+      .from('product_images')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId)
+      .eq('type', type);
+    if (type === 'model' && (count ?? 0) >= 10) return { error: 'Máximo 10 fotos de modelo por pieza.' };
 
-  const key = `${productId}/${type}/${crypto.randomUUID()}.${ext}`;
-  const { error: upErr } = await supabase.storage
-    .from(BUCKET)
-    .upload(key, file, { contentType: file.type, upsert: false });
-  if (upErr) return { error: `No se pudo subir: ${upErr.message}` };
+    const key = `${productId}/${type}/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(BUCKET)
+      .upload(key, file, { contentType: file.type, upsert: false });
+    if (upErr) return { error: `No se pudo subir: ${upErr.message}` };
 
-  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(key);
-  const position = (count ?? 0) + 1;
-  const { error: insErr } = await supabase.from('product_images').insert({
-    product_id: productId,
-    url: pub.publicUrl,
-    type,
-    position,
-    alt: '',
-  });
-  if (insErr) {
-    await supabase.storage.from(BUCKET).remove([key]); // roll back the upload
-    return { error: `No se pudo registrar la foto: ${insErr.message}` };
+    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(key);
+    const position = (count ?? 0) + 1;
+    const { error: insErr } = await supabase.from('product_images').insert({
+      product_id: productId,
+      url: pub.publicUrl,
+      type,
+      position,
+      alt: '',
+    });
+    if (insErr) {
+      await supabase.storage.from(BUCKET).remove([key]); // roll back the upload
+      return { error: `No se pudo registrar la foto: ${insErr.message}` };
+    }
+
+    revalidateStore();
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo subir la imagen.' };
   }
-
-  revalidateStore();
-  return { ok: true };
 }
 
 export async function deleteImageAction(formData: FormData) {

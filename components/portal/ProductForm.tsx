@@ -1,26 +1,44 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
-import { saveProductAction, type ActionState } from '@/app/portal/actions';
+import { useState, useTransition, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { saveProductAction } from '@/app/portal/actions';
 import type { AdminProduct } from '@/lib/admin';
 
 const SIZES = ['XS', 'S', 'M', 'L'] as const;
 
-function SaveButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button type="submit" className="pbtn pbtn--primary" disabled={pending}>
-      {pending ? 'Guardando…' : 'Guardar'}
-    </button>
-  );
-}
-
+// Save flow mirrors the (working) PhotoManager: call the server action directly
+// inside a transition and reflect the result — no useFormState, no redirect().
+// This avoids the "Application error" that a redirect-in-action can throw.
 export function ProductForm({ product }: { product?: AdminProduct }) {
-  const [state, formAction] = useFormState<ActionState, FormData>(saveProductAction, {});
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const sizeOf = (s: string) => product?.sizes.find((x) => x.size === s);
 
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setSaved(false);
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const res = await saveProductAction(fd);
+      if (res?.error) {
+        setError(res.error);
+        return;
+      }
+      if (res?.isNew && res.id) {
+        router.push(`/portal/productos/${res.id}`);
+        return;
+      }
+      setSaved(true);
+      router.refresh();
+    });
+  };
+
   return (
-    <form action={formAction} className="pform pform--grid">
+    <form onSubmit={onSubmit} className="pform pform--grid">
       {product && <input type="hidden" name="id" value={product.id} />}
 
       <label className="pfield pfield--wide">
@@ -88,10 +106,13 @@ export function ProductForm({ product }: { product?: AdminProduct }) {
         <span>Activo (visible en la tienda)</span>
       </label>
 
-      {state.error && <p className="pmsg pmsg--error pfield--wide">{state.error}</p>}
+      {error && <p className="pmsg pmsg--error pfield--wide">{error}</p>}
+      {saved && <p className="pmsg pmsg--ok pfield--wide">Cambios guardados.</p>}
 
       <div className="pform__actions pfield--wide">
-        <SaveButton />
+        <button type="submit" className="pbtn pbtn--primary" disabled={pending}>
+          {pending ? 'Guardando…' : 'Guardar'}
+        </button>
       </div>
     </form>
   );
