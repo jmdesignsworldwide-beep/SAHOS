@@ -5,17 +5,22 @@ import { CollectionGrid } from '@/components/home/CollectionGrid';
 import { Campaign } from '@/components/home/Campaign';
 import { House } from '@/components/home/House';
 import { Footer } from '@/components/layout/Footer';
+import { fetchAllProducts } from '@/lib/catalog';
+
+// Reflect portal edits per request (source of truth: Supabase).
+export const dynamic = 'force-dynamic';
 
 // Home (spec §4.1): intro → hero → manifesto → collection → campaign → house →
 // footer. Sections are client components carrying their own scroll timelines.
-export default function HomePage() {
+export default async function HomePage() {
+  const products = await fetchAllProducts();
   return (
     <>
       <Intro />
       <main>
         <Hero />
         <Manifesto />
-        <CollectionGrid />
+        <CollectionGrid products={products} />
         <Campaign
           image="/products/campaign/campaign-1.jpg"
           label="Campaign"
