@@ -57,12 +57,12 @@ insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true)
 on conflict (id) do update set public = true;
 
--- Public can READ product images (bucket is public; policy makes it explicit).
+-- NOTE: no anonymous SELECT policy on storage.objects. A public bucket already
+-- serves its files via the public URL (…/object/public/product-images/…) with no
+-- RLS check, so the store displays images fine. Granting anon SELECT would only
+-- enable bucket *listing* (enumerating all objects), which the Security Advisor
+-- flags (public_bucket_allows_listing) — so we deliberately omit it.
 drop policy if exists "public read product images" on storage.objects;
-create policy "public read product images"
-  on storage.objects for select
-  to public
-  using (bucket_id = 'product-images');
 
 -- Only authenticated admins can upload / modify / delete product images.
 drop policy if exists "admin upload product images" on storage.objects;

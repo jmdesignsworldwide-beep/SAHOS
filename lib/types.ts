@@ -5,6 +5,10 @@ export type Size = 'XS' | 'S' | 'M' | 'L';
 
 export type ProductImageType = 'model' | 'garment_360' | 'detail';
 
+/** Inventory mode per size: 'limited' tracks/decrements stock; 'on_demand'
+ *  is always available and never sells out. */
+export type StockMode = 'limited' | 'on_demand';
+
 export interface ProductImage {
   url: string;
   type: ProductImageType;
@@ -15,6 +19,13 @@ export interface ProductImage {
 export interface ProductSizeStock {
   size: Size;
   stock: number;
+  mode?: StockMode;
+}
+
+/** True when a size can be added to the bag: on-demand always, limited only
+ *  while stock remains. Shared by the storefront and the checkout validation. */
+export function isSizeAvailable(s: Pick<ProductSizeStock, 'stock' | 'mode'>): boolean {
+  return s.mode === 'on_demand' || s.stock > 0;
 }
 
 export interface Product {

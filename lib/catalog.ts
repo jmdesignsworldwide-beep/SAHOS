@@ -7,7 +7,7 @@ import type { Product, ProductImage, Size } from '@/lib/types';
 // Columns pulled for a full public product view.
 const PRODUCT_SELECT =
   'slug,name,subtitle,description,color,factory_ref,price_cents,currency,position,active,' +
-  'product_images(url,type,position,alt),product_sizes(size,stock)';
+  'product_images(url,type,position,alt),product_sizes(size,stock,mode)';
 
 // Map a Supabase row to the shared Product shape. `details` (the Details
 // accordion bullets) are not portal-managed, so they come from the static
@@ -34,7 +34,11 @@ function mapRow(row: any): Product {
     currency: row.currency ?? 'usd',
     position: row.position ?? 0,
     images,
-    sizes: (row.product_sizes ?? []).map((s: any) => ({ size: s.size as Size, stock: s.stock ?? 0 })),
+    sizes: (row.product_sizes ?? []).map((s: any) => ({
+      size: s.size as Size,
+      stock: s.stock ?? 0,
+      mode: (s.mode ?? 'limited') as Product['sizes'][number]['mode'],
+    })),
   };
 }
 
@@ -118,7 +122,7 @@ export async function resolveBag(lines: PricedLine[]): Promise<ResolvedLine[]> {
   const slugs = Array.from(new Set(lines.map((l) => l.slug)));
   const { data: products, error } = await supabase
     .from('products')
-    .select('slug,name,price_cents,active,product_sizes(size,stock)')
+    .select('slug,name,price_cents,active,product_sizes(size,stock,mode)')
     .in('slug', slugs)
     .eq('active', true);
 
@@ -129,13 +133,15 @@ export async function resolveBag(lines: PricedLine[]): Promise<ResolvedLine[]> {
     if (!p) throw new Error(`Unknown or inactive product: ${line.slug}`);
     if (p.price_cents == null) throw new Error(`Price not set for ${p.name}`);
     const sizeRow = (p.product_sizes as any[])?.find((s) => s.size === line.size);
+    // On-demand sizes are always fulfillable; limited sizes need stock.
+    const inStock = sizeRow?.mode === 'on_demand' || (sizeRow?.stock ?? 0) >= line.qty;
     return {
       slug: p.slug,
       name: p.name,
       size: line.size,
       qty: line.qty,
       unitPriceCents: p.price_cents as number,
-      inStock: (sizeRow?.stock ?? 0) >= line.qty,
+      inStock,
     };
   });
 }

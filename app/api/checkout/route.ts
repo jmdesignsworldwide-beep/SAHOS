@@ -67,9 +67,12 @@ export async function POST(req: Request) {
       })),
       automatic_tax: { enabled: false },
       shipping_address_collection: { allowed_countries: ['US'] },
-      // Bind the resolved cart into metadata so the webhook can reconcile.
+      // Bind the resolved cart (server-authoritative prices) into metadata so
+      // the webhook can record order items + decrement inventory.
       metadata: {
-        cart: JSON.stringify(resolved.map((r) => ({ slug: r.slug, size: r.size, qty: r.qty }))),
+        cart: JSON.stringify(
+          resolved.map((r) => ({ slug: r.slug, size: r.size, qty: r.qty, unit_price_cents: r.unitPriceCents }))
+        ),
       },
       success_url: `${env.siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${env.siteUrl}/collection`,
