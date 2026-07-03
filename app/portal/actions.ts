@@ -59,7 +59,7 @@ export async function signInAction(_prev: ActionState, formData: FormData): Prom
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: 'Correo o contraseña incorrectos.' };
 
-  redirect('/portal/productos');
+  redirect('/portal/dashboard');
 }
 
 export async function signOutAction() {
@@ -179,7 +179,7 @@ export async function deleteProductAction(formData: FormData) {
 
   await supabase.from('products').delete().eq('id', id);
   revalidateStore();
-  redirect('/portal/productos');
+  redirect('/portal/dashboard');
 }
 
 // --------------------------------------------------------------------------
@@ -214,6 +214,64 @@ export async function updateFulfillmentAction(formData: FormData): Promise<Actio
   revalidatePath(`/portal/pedidos/${id}`);
   revalidatePath('/portal/dashboard');
   return { ok: true };
+}
+
+// --------------------------------------------------------------------------
+// Inventory (Tanda 3)
+// --------------------------------------------------------------------------
+export async function updateStockAction(formData: FormData): Promise<ActionState> {
+  try {
+    await requireUser();
+    const supabase = createSSRClient();
+
+    const productId = str(formData.get('product_id'), 64);
+    const size = str(formData.get('size'), 4);
+    const qtyRaw = str(formData.get('quantity'), 8);
+    if (!productId) return { error: 'Falta el producto.' };
+    if (!['XS', 'S', 'M', 'L'].includes(size)) return { error: 'Talla inválida.' };
+    const qty = Number(qtyRaw);
+    if (!Number.isInteger(qty) || qty < 0 || qty > 100000) return { error: 'Cantidad inválida.' };
+
+    const { error } = await supabase
+      .from('product_sizes')
+      .update({ stock: qty })
+      .eq('product_id', productId)
+      .eq('size', size);
+    if (error) return { error: `No se pudo actualizar: ${error.message}` };
+
+    revalidatePath('/portal/inventario');
+    revalidatePath('/portal/dashboard');
+    // stock affects storefront availability — refresh the public pages too
+    revalidatePath('/');
+    revalidatePath('/collection');
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo actualizar el stock.' };
+  }
+}
+
+export async function setStockModeAction(formData: FormData): Promise<ActionState> {
+  try {
+    await requireUser();
+    const supabase = createSSRClient();
+
+    const productId = str(formData.get('product_id'), 64);
+    const mode = str(formData.get('mode'), 12);
+    if (!productId) return { error: 'Falta el producto.' };
+    if (mode !== 'limited' && mode !== 'on_demand') return { error: 'Modo inválido.' };
+
+    // mode is per-size in the schema; a piece toggle sets all its sizes.
+    const { error } = await supabase.from('product_sizes').update({ mode }).eq('product_id', productId);
+    if (error) return { error: `No se pudo cambiar el modo: ${error.message}` };
+
+    revalidatePath('/portal/inventario');
+    revalidatePath('/portal/dashboard');
+    revalidatePath('/');
+    revalidatePath('/collection');
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo cambiar el modo.' };
+  }
 }
 
 // --------------------------------------------------------------------------
