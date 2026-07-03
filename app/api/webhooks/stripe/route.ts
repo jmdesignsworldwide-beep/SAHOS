@@ -40,6 +40,15 @@ export async function POST(req: Request) {
         if (supabase && session.payment_status === 'paid') {
           const paymentIntent = session.payment_intent ?? session.id;
 
+          // Shipping details location moved across Stripe API versions; read
+          // both. Store a normalized { name, phone, address } for the portal.
+          const ship = session.shipping_details ?? session.collected_information?.shipping_details ?? null;
+          const phone = session.customer_details?.phone ?? null;
+          const shippingJson = ship
+            ? { name: ship.name ?? null, phone, address: ship.address ?? null }
+            : session.customer_details ?? null;
+          const customerName = ship?.name ?? session.customer_details?.name ?? null;
+
           // 1) Create/patch the order (payment status is authoritative here).
           const { data: order, error: orderErr } = await supabase
             .from('orders')
@@ -47,11 +56,11 @@ export async function POST(req: Request) {
               {
                 stripe_payment_intent: paymentIntent,
                 email: session.customer_details?.email ?? null,
-                customer_name: session.customer_details?.name ?? null,
+                customer_name: customerName,
                 status: 'paid',
                 amount_cents: session.amount_total ?? 0,
                 currency: session.currency ?? 'usd',
-                shipping_json: session.shipping_details ?? session.customer_details ?? null,
+                shipping_json: shippingJson,
               },
               { onConflict: 'stripe_payment_intent' }
             )

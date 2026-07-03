@@ -52,7 +52,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     slug: 'kateryn',
-    name: 'Kateryn',
+    name: 'Kathyrn',
     subtitle: 'Flowy Two Piece Set',
     description:
       'A flowing two-piece set — a V-neck collared top with long sleeves over a thick-waistband, straight-flow trouser. Quiet volume, made to move.',
@@ -68,7 +68,7 @@ export const PRODUCTS: Product[] = [
     priceCents: null,
     currency: 'usd',
     position: 2,
-    images: galleryFor('kateryn', 'Kateryn'),
+    images: galleryFor('kateryn', 'Kathyrn'),
     sizes: seedStock(),
   },
   {
