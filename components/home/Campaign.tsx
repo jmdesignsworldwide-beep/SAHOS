@@ -11,11 +11,13 @@ export function Campaign({
   line,
   tone = '#DED9D3',
   label,
+  alt,
 }: {
   image: string;
   line: string;
   tone?: string;
   label: string;
+  alt?: string;
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLDivElement>(null);
@@ -49,7 +51,7 @@ export function Campaign({
   return (
     <section ref={sectionRef} className="campaign">
       <div ref={mediaRef} className="campaign__media">
-        <SmartImage src={image} alt={label} fill sizes="100vw" placeholderLabel={label} tone={tone} />
+        <SmartImage src={image} alt={alt ?? label} fill sizes="100vw" placeholderLabel={label} tone={tone} />
       </div>
       <div className="campaign__line">
         <h2>{line}</h2>

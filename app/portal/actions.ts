@@ -6,8 +6,11 @@ import { headers } from 'next/headers';
 import { createSSRClient, getSessionUser } from '@/lib/supabase/ssr';
 import { requireUser } from '@/lib/admin';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { isSiteImageSlot } from '@/lib/site-images';
 
 const BUCKET = 'product-images';
+// Site images live in the same bucket under this prefix (no new bucket needed).
+const SITE_PREFIX = 'site';
 const SIZES = ['XS', 'S', 'M', 'L'] as const;
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIME: Record<string, string> = {
@@ -325,6 +328,90 @@ export async function uploadImageAction(formData: FormData): Promise<ActionState
     return { ok: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'No se pudo subir la imagen.' };
+  }
+}
+
+// --------------------------------------------------------------------------
+// Site images (heros, campaign, packaging, Our Story) — one row per slot_key.
+// Lets the owner replace ANY fixed site image without touching code. Guarded so
+// any failure surfaces as a clean inline message; whitelist-checks the slot_key.
+// --------------------------------------------------------------------------
+export async function saveSiteImageAction(formData: FormData): Promise<ActionState> {
+  try {
+    await requireUser();
+    const ip = clientIp(headers());
+    const limit = rateLimit(`site-image:${ip}`, 30, 60_000);
+    if (!limit.ok) return { error: 'Demasiadas solicitudes. Espera un momento.' };
+
+    const supabase = createSSRClient();
+
+    const slotKey = str(formData.get('slot_key'), 64);
+    if (!isSiteImageSlot(slotKey)) return { error: 'Slot inválido.' };
+    const altText = str(formData.get('alt_text'), 300);
+
+    // Current row (to keep the URL on an alt-only save + clean up the old file).
+    const { data: existing } = await supabase
+      .from('site_images')
+      .select('image_url')
+      .eq('slot_key', slotKey)
+      .maybeSingle();
+    let imageUrl: string | null = existing?.image_url ?? null;
+
+    const file = formData.get('file');
+    let uploadedKey: string | null = null;
+    if (file instanceof File && file.size > 0) {
+      if (file.size > MAX_UPLOAD_BYTES) return { error: 'La imagen supera el máximo de 10MB.' };
+      const ext = ALLOWED_MIME[file.type];
+      if (!ext) return { error: 'Formato no permitido. Usa JPG, PNG o WebP.' };
+
+      // Sanitized, unguessable key: site/<slot>/<uuid>.<ext>. slot_key is
+      // whitelisted above, so the path is fully controlled by the server.
+      const key = `${SITE_PREFIX}/${slotKey}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from(BUCKET)
+        .upload(key, file, { contentType: file.type, upsert: false });
+      if (upErr) return { error: `No se pudo subir: ${upErr.message}` };
+
+      const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(key);
+      imageUrl = pub.publicUrl;
+      uploadedKey = key;
+    }
+
+    if (!uploadedKey && !existing) {
+      // Nothing to write (no file and the slot has no row yet) — treat alt-only
+      // saves as valid by creating the row so the value persists.
+    }
+
+    const { error: upsertErr } = await supabase.from('site_images').upsert(
+      {
+        slot_key: slotKey,
+        image_url: imageUrl,
+        alt_text: altText || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'slot_key' }
+    );
+    if (upsertErr) {
+      if (uploadedKey) await supabase.storage.from(BUCKET).remove([uploadedKey]); // roll back
+      return { error: `No se pudo guardar: ${upsertErr.message}` };
+    }
+
+    // Best-effort cleanup of the previously stored file (only our site/ objects).
+    if (uploadedKey && existing?.image_url) {
+      const oldPath = storagePathFromUrl(existing.image_url);
+      if (oldPath && oldPath.startsWith(`${SITE_PREFIX}/`)) {
+        await supabase.storage.from(BUCKET).remove([oldPath]);
+      }
+    }
+
+    // Reflect the change on the storefront (both pages are force-dynamic).
+    revalidatePath('/');
+    revalidatePath('/our-story');
+    revalidatePath('/collection');
+    revalidatePath('/portal/imagenes');
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo guardar la imagen.' };
   }
 }
 

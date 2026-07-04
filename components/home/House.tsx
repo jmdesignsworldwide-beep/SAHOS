@@ -4,13 +4,21 @@ import { SmartImage } from '@/components/ui/SmartImage';
 import { ClipReveal, FadeUp } from '@/components/motion/Reveal';
 
 // The House (spec §4.1): the velvet hangers / packaging framed as ceremony.
-export function House() {
+// Image is portal-managed (site_images slot "house_packaging"); props default
+// to the current file so nothing breaks if unset.
+export function House({
+  src = '/products/house/packaging.jpg',
+  alt = 'SAHOS velvet hangers and packaging',
+}: {
+  src?: string;
+  alt?: string;
+} = {}) {
   return (
     <section className="house" id="house">
       <ClipReveal className="house__media">
         <SmartImage
-          src="/products/house/packaging.jpg"
-          alt="SAHOS velvet hangers and packaging"
+          src={src}
+          alt={alt}
           fill
           sizes="(max-width: 900px) 100vw, 55vw"
           placeholderLabel="The House"

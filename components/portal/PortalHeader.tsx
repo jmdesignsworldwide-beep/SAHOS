@@ -13,6 +13,7 @@ export function PortalHeader() {
         <Link href="/portal/pedidos">Pedidos</Link>
         <Link href="/portal/inventario">Inventario</Link>
         <Link href="/portal/productos">Productos</Link>
+        <Link href="/portal/imagenes">Imágenes</Link>
         <Link href="/portal/cuenta">Cuenta</Link>
         <form action={signOutAction}>
           <button type="submit" className="phead__signout">

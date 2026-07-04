@@ -2,6 +2,11 @@ import type { Metadata } from 'next';
 import { Footer } from '@/components/layout/Footer';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
 import { SmartImage } from '@/components/ui/SmartImage';
+import { getSiteImageMap } from '@/lib/site-images.server';
+import { resolveSiteImage } from '@/lib/site-images';
+
+// Reflect portal image edits without a redeploy.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Our Story',
@@ -13,9 +18,14 @@ export const metadata: Metadata = {
 // full-bleed imagery — every photo is contained within its column with generous
 // margin so the WhatsApp-grade source compression reads softer. Section figures
 // carry a slow Ken Burns breathe (globals.css) plus the site-wide clip reveal.
-// Image srcs are clearly-marked placeholders under /our-story/ — drop the
-// high-res originals into those slots later without touching this layout.
-export default function OurStoryPage() {
+// The three photos are portal-managed via site_images (slots our_story_*),
+// falling back to the /public files until the owner uploads originals.
+export default async function OurStoryPage() {
+  const siteImages = await getSiteImageMap();
+  const founder = resolveSiteImage(siteImages, 'our_story_founder');
+  const philosophy = resolveSiteImage(siteImages, 'our_story_philosophy');
+  const design = resolveSiteImage(siteImages, 'our_story_design');
+
   return (
     <>
       {/* Section 1 — Intro */}
@@ -38,8 +48,8 @@ export default function OurStoryPage() {
         <section className="story-row">
           <ClipReveal className="story-figure">
             <SmartImage
-              src="/our-story/founder.jpg"
-              alt="SAHOS founder"
+              src={founder.src}
+              alt={founder.alt}
               fill
               sizes="(max-width: 900px) 100vw, 45vw"
               placeholderLabel="Founder"
@@ -65,8 +75,8 @@ export default function OurStoryPage() {
         <section className="story-row story-row--reverse">
           <ClipReveal className="story-figure">
             <SmartImage
-              src="/our-story/philosophy.jpg"
-              alt="SAHOS craftsmanship detail"
+              src={philosophy.src}
+              alt={philosophy.alt}
               fill
               sizes="(max-width: 900px) 100vw, 45vw"
               placeholderLabel="Philosophy"
@@ -104,8 +114,8 @@ export default function OurStoryPage() {
         <section className="story-row">
           <ClipReveal className="story-figure">
             <SmartImage
-              src="/our-story/design.jpg"
-              alt="SAHOS design process"
+              src={design.src}
+              alt={design.alt}
               fill
               sizes="(max-width: 900px) 100vw, 45vw"
               placeholderLabel="Design"
