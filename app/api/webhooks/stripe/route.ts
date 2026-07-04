@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { getServiceClient } from '@/lib/supabase/server';
+import { syncOrderFromSession } from '@/lib/orders';
 import { env } from '@/lib/env';
 
 export const runtime = 'nodejs';
@@ -37,44 +38,14 @@ export async function POST(req: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as any;
-        if (supabase && session.payment_status === 'paid') {
-          const paymentIntent = session.payment_intent ?? session.id;
-
-          // 1) Create/patch the order (payment status is authoritative here).
-          const { data: order, error: orderErr } = await supabase
-            .from('orders')
-            .upsert(
-              {
-                stripe_payment_intent: paymentIntent,
-                email: session.customer_details?.email ?? null,
-                customer_name: session.customer_details?.name ?? null,
-                status: 'paid',
-                amount_cents: session.amount_total ?? 0,
-                currency: session.currency ?? 'usd',
-                shipping_json: session.shipping_details ?? session.customer_details ?? null,
-              },
-              { onConflict: 'stripe_payment_intent' }
-            )
-            .select('id')
-            .single();
-
-          // 2) Record items + decrement inventory atomically (idempotent on
-          //    retries). The cart was bound into metadata at checkout, already
-          //    re-priced server-side — never trusted from the browser.
-          if (!orderErr && order) {
-            let items: unknown = [];
-            try {
-              items = JSON.parse(session.metadata?.cart ?? '[]');
-            } catch {
-              items = [];
-            }
-            const { error: rpcErr } = await supabase.rpc('record_order_items', {
-              p_order: order.id,
-              p_items: items,
-            });
-            if (rpcErr) console.error('[webhook] record_order_items failed', rpcErr.message);
-          } else if (orderErr) {
-            console.error('[webhook] order upsert failed', orderErr.message);
+        // Create the order via the shared, idempotent path. On any failure,
+        // return non-200 so Stripe's delivery log shows the real cause and
+        // retries once it's fixed (instead of a silent, misleading 200).
+        if (session.payment_status === 'paid') {
+          const res = await syncOrderFromSession(session);
+          if (!res.ok) {
+            console.error('[webhook] order sync failed:', res.reason);
+            return NextResponse.json({ error: res.reason }, { status: 500 });
           }
         }
         break;

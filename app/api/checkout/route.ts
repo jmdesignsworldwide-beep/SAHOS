@@ -4,6 +4,7 @@ import { resolveBag } from '@/lib/catalog';
 import { getStripe } from '@/lib/stripe';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { env, hasStripe } from '@/lib/env';
+import { SHIPPING_FLAT_CENTS, SHIPPING_LABEL, SHIPPING_ALLOWED_COUNTRIES } from '@/lib/shipping';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,10 +53,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Payments unavailable' }, { status: 503 });
   }
 
+  // Base URL for the post-payment redirect. Derive it from the ACTUAL request
+  // origin so the customer always returns to the same domain the checkout ran
+  // on — never a stale/wrong NEXT_PUBLIC_SITE_URL (which was redirecting to
+  // localhost). Falls back to the env var, then to the Stripe-safe default.
+  const h = req.headers;
+  const fwdHost = h.get('x-forwarded-host') || h.get('host');
+  const fwdProto = h.get('x-forwarded-proto') || 'https';
+  const base = h.get('origin') || (fwdHost ? `${fwdProto}://${fwdHost}` : env.siteUrl);
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      // Apple Pay / Google Pay surface automatically via 'card' in Checkout.
+      // Apple Pay / Google Pay surface automatically on hosted Checkout via 'card'.
       payment_method_types: ['card'],
       line_items: resolved.map((r) => ({
         quantity: r.qty,
@@ -66,16 +76,30 @@ export async function POST(req: Request) {
         },
       })),
       automatic_tax: { enabled: false },
-      shipping_address_collection: { allowed_countries: ['US'] },
+      // Full shipping address (required for shipping labels later — EasyPost).
+      shipping_address_collection: { allowed_countries: [...SHIPPING_ALLOWED_COUNTRIES] },
+      phone_number_collection: { enabled: true },
+      // Flat shipping fee, shown as its own line at checkout. Single source of
+      // truth in lib/shipping.ts — swap for EasyPost dynamic rates later.
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: { amount: SHIPPING_FLAT_CENTS, currency: 'usd' },
+            display_name: SHIPPING_LABEL,
+          },
+        },
+      ],
       // Bind the resolved cart (server-authoritative prices) into metadata so
       // the webhook can record order items + decrement inventory.
       metadata: {
         cart: JSON.stringify(
           resolved.map((r) => ({ slug: r.slug, size: r.size, qty: r.qty, unit_price_cents: r.unitPriceCents }))
         ),
+        shipping_cents: String(SHIPPING_FLAT_CENTS),
       },
-      success_url: `${env.siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${env.siteUrl}/collection`,
+      success_url: `${base}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${base}/collection`,
     });
 
     return NextResponse.json({ url: session.url });
