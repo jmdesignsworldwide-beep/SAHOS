@@ -147,6 +147,10 @@
 .pmsg--ok {
   color: #1f6b3a;
 }
+.pmsg--muted {
+  color: #9b978f;
+  max-width: 60ch;
+}
 
 /* login */
 .plogin {
@@ -867,4 +871,146 @@
   .dash__metrics { grid-template-columns: 1fr 1fr; }
   .imode { width: 100%; }
   .imode__opt { flex: 1; }
+}
+
+/* =========================================================================
+   Site images manager (/portal/imagenes)
+   ========================================================================= */
+.simg-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+.simg-group .psection-title {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e7e5e1;
+  margin-bottom: 1.5rem;
+}
+.simg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+.simg-card {
+  background: #fff;
+  border: 1px solid #e7e5e1;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.simg-card__media {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  background: #f0eeea;
+  overflow: hidden;
+}
+.simg-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.simg-card__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b8b4ac;
+  font-size: 1.5rem;
+}
+.simg-card__tag {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #55524d;
+  backdrop-filter: blur(4px);
+}
+.simg-card__tag.is-custom {
+  background: #1a1a18;
+  color: #fff;
+}
+.simg-card__tag--preview {
+  background: #1f6b3a;
+  color: #fff;
+}
+.simg-card__body {
+  padding: 0.9rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.simg-card__label {
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+.simg-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.simg-card__field span {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9b978f;
+}
+.simg-card__field input {
+  border: 1px solid #d6d3ce;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.85rem;
+  color: #1a1a18;
+  background: #fff;
+  width: 100%;
+}
+.simg-card__field input:focus {
+  outline: none;
+  border-color: #1a1a18;
+}
+.simg-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+.simg-card__actions .pbtn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+}
+.simg-card__reset {
+  background: none;
+  border: none;
+  color: #9b978f;
+  cursor: pointer;
+  font-size: 0.78rem;
+  text-decoration: underline;
+}
+.simg-card__file {
+  font-size: 0.72rem;
+  color: #55524d;
+  word-break: break-all;
+}
+.simg-card__hint {
+  font-size: 0.68rem;
+  color: #b8b4ac;
+}
+.simg-card .pmsg {
+  margin: 0.15rem 0 0;
+}
+@media (max-width: 520px) {
+  .simg-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .simg-card__body {
+    padding: 0.75rem 0.75rem 0.9rem;
+  }
 }

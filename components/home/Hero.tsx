@@ -5,16 +5,24 @@ import { SplitReveal } from '@/components/motion/SplitReveal';
 import { useParallax } from '@/hooks/useReveal';
 
 // Full-bleed editorial hero (spec §4.1). Model image is the hero; the title
-// reveals letter-by-letter; the image drifts on a scrubbed parallax.
-export function Hero() {
+// reveals letter-by-letter; the image drifts on a scrubbed parallax. The image
+// is portal-managed (site_images slot "home_hero"); props default to the
+// current file so nothing breaks if unset.
+export function Hero({
+  src = '/products/campaign/hero.jpg',
+  alt = 'SAHOS — The Marilyn Collection campaign',
+}: {
+  src?: string;
+  alt?: string;
+} = {}) {
   const parallaxRef = useParallax<HTMLDivElement>(90);
 
   return (
     <section className="hero">
       <div ref={parallaxRef} className="hero__media">
         <SmartImage
-          src="/products/campaign/hero.jpg"
-          alt="SAHOS — The Marilyn Collection campaign"
+          src={src}
+          alt={alt}
           fill
           priority
           sizes="100vw"
