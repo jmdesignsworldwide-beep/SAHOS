@@ -335,6 +335,7 @@ a {
   color: inherit;
   cursor: pointer;
   font-weight: 400;
+  white-space: nowrap;
 }
 .nav__bag-count {
   margin-left: 0.3rem;
@@ -344,9 +345,23 @@ a {
   .nav__link--hide-sm {
     display: none;
   }
+  /* Two left links (Collection + Our Story) now share the nav on mobile, so
+     tighten link size/tracking and gutter just enough that both fit on one line
+     beside the centered wordmark — no collision, no redesign. */
+  .nav__inner {
+    padding-inline: clamp(0.9rem, 4vw, 1.25rem);
+  }
+  .nav__group {
+    gap: 0.85rem;
+  }
+  .nav__link,
+  .nav__bag {
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+  }
   .nav__brand {
-    font-size: 0.85rem;
-    letter-spacing: 0.32em;
+    font-size: 0.8rem;
+    letter-spacing: 0.28em;
   }
 }
 
@@ -1201,4 +1216,130 @@ a {
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.1em;
+}
+
+/* =========================================================================
+   Our Story page — brand narrative. Radical restraint, generous air, contained
+   imagery only (no full-bleed). Serif for every heading; Jost for body.
+   ========================================================================= */
+.story-intro {
+  padding: calc(var(--nav-h) + clamp(4rem, 10vw, 9rem)) var(--edge) clamp(2.5rem, 6vw, 5rem);
+  text-align: center;
+  max-width: 760px;
+  margin-inline: auto;
+}
+.story-intro__kicker {
+  margin-bottom: 1.5rem;
+}
+.story-intro__title {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  font-size: clamp(2.4rem, 6vw, 4.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+}
+.story-intro__body {
+  color: #767470;
+  font-size: clamp(1rem, 1.4vw, 1.1rem);
+  line-height: 1.75;
+  max-width: 54ch;
+  margin-inline: auto;
+}
+
+.story {
+  padding-inline: var(--edge);
+}
+.story-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2.5rem, 6vw, 6rem);
+  align-items: center;
+  padding-block: clamp(4rem, 11vw, 10rem);
+  max-width: 1240px;
+  margin-inline: auto;
+}
+@media (min-width: 900px) {
+  .story-row {
+    grid-template-columns: 0.92fr 1.08fr;
+  }
+}
+
+/* Contained figure: consistent 4:5 editorial ratio, rounded corners of the
+   surrounding air rather than the image. object-fit: cover, no upscaling. */
+.story-figure {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #faf9f8;
+}
+.story-figure__img,
+.story-figure .smart-image-fallback {
+  object-fit: cover;
+}
+/* Slow Ken Burns breathe (scale 1.0 → 1.03, ~9s, gentle ease, alternating) so
+   the frame feels cinematic and the source compression reads softer. Disabled
+   under reduced-motion by the global rule above. */
+.story-figure__img {
+  transform-origin: center;
+  animation: story-kenburns 9s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes story-kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.03);
+  }
+}
+
+/* On desktop, reverse rows put the copy on the left / image on the right.
+   DOM order keeps the figure first so mobile always stacks image-on-top. */
+@media (min-width: 900px) {
+  .story-row--reverse .story-figure {
+    order: 2;
+  }
+  .story-row--reverse .story-copy {
+    order: 1;
+  }
+}
+
+.story-copy__title {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+}
+.story-copy__body {
+  color: #767470;
+  font-size: clamp(1rem, 1.3vw, 1.08rem);
+  line-height: 1.8;
+  max-width: 48ch;
+}
+
+/* Testimonial — centered on a subtle darker-cream band of the brand. */
+.story-quote {
+  background: #efeae3;
+  padding: clamp(5rem, 13vw, 11rem) var(--edge);
+  text-align: center;
+}
+.story-quote__text {
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.7rem, 4.4vw, 3.4rem);
+  line-height: 1.28;
+  letter-spacing: -0.005em;
+  color: #1a1a18;
+  max-width: 20ch;
+  margin: 0 auto 2rem;
+}
+.story-quote__by {
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #767470;
 }
