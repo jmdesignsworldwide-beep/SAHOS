@@ -5,11 +5,13 @@ import { signOutAction } from '@/app/portal/actions';
 export function PortalHeader() {
   return (
     <header className="phead">
-      <Link href="/portal/productos" className="phead__brand">
+      <Link href="/portal/dashboard" className="phead__brand">
         SAHOS<span>· Portal</span>
       </Link>
       <nav className="phead__nav">
+        <Link href="/portal/dashboard">Dashboard</Link>
         <Link href="/portal/pedidos">Pedidos</Link>
+        <Link href="/portal/inventario">Inventario</Link>
         <Link href="/portal/productos">Productos</Link>
         <Link href="/portal/cuenta">Cuenta</Link>
         <form action={signOutAction}>

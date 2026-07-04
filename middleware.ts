@@ -90,7 +90,7 @@ export async function middleware(request: NextRequest) {
     }
     if (user && isLogin) {
       const url = request.nextUrl.clone();
-      url.pathname = '/portal/productos';
+      url.pathname = '/portal/dashboard';
       return NextResponse.redirect(url);
     }
   }
