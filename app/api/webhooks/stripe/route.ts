@@ -37,7 +37,18 @@ export async function POST(req: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as any;
-        if (supabase && session.payment_status === 'paid') {
+        // Only act on a paid session; other statuses are acknowledged (200).
+        if (session.payment_status === 'paid') {
+          // If the DB can't be reached, FAIL loudly so the failure shows up in
+          // Stripe's delivery log (and Stripe retries once it's fixed) instead
+          // of a silent 200 that looks successful but creates no order.
+          if (!supabase) {
+            console.error('[webhook] SUPABASE_SERVICE_ROLE_KEY missing — cannot create order');
+            return NextResponse.json(
+              { error: 'Order store not configured (missing service role key)' },
+              { status: 500 }
+            );
+          }
           const paymentIntent = session.payment_intent ?? session.id;
 
           // Shipping details location moved across Stripe API versions; read
@@ -67,23 +78,28 @@ export async function POST(req: Request) {
             .select('id')
             .single();
 
+          if (orderErr || !order) {
+            console.error('[webhook] order upsert failed', orderErr?.message);
+            return NextResponse.json({ error: `Order write failed: ${orderErr?.message}` }, { status: 500 });
+          }
+
           // 2) Record items + decrement inventory atomically (idempotent on
           //    retries). The cart was bound into metadata at checkout, already
           //    re-priced server-side — never trusted from the browser.
-          if (!orderErr && order) {
-            let items: unknown = [];
-            try {
-              items = JSON.parse(session.metadata?.cart ?? '[]');
-            } catch {
-              items = [];
-            }
-            const { error: rpcErr } = await supabase.rpc('record_order_items', {
-              p_order: order.id,
-              p_items: items,
-            });
-            if (rpcErr) console.error('[webhook] record_order_items failed', rpcErr.message);
-          } else if (orderErr) {
-            console.error('[webhook] order upsert failed', orderErr.message);
+          let items: unknown = [];
+          try {
+            items = JSON.parse(session.metadata?.cart ?? '[]');
+          } catch {
+            items = [];
+          }
+          const { error: rpcErr } = await supabase.rpc('record_order_items', {
+            p_order: order.id,
+            p_items: items,
+          });
+          if (rpcErr) {
+            console.error('[webhook] record_order_items failed', rpcErr.message);
+            // order exists; surface so the delivery log flags it and retries
+            return NextResponse.json({ error: `Items write failed: ${rpcErr.message}` }, { status: 500 });
           }
         }
         break;

@@ -53,6 +53,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Payments unavailable' }, { status: 503 });
   }
 
+  // Base URL for the post-payment redirect. Derive it from the ACTUAL request
+  // origin so the customer always returns to the same domain the checkout ran
+  // on — never a stale/wrong NEXT_PUBLIC_SITE_URL (which was redirecting to
+  // localhost). Falls back to the env var, then to the Stripe-safe default.
+  const h = req.headers;
+  const fwdHost = h.get('x-forwarded-host') || h.get('host');
+  const fwdProto = h.get('x-forwarded-proto') || 'https';
+  const base = h.get('origin') || (fwdHost ? `${fwdProto}://${fwdHost}` : env.siteUrl);
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -89,8 +98,8 @@ export async function POST(req: Request) {
         ),
         shipping_cents: String(SHIPPING_FLAT_CENTS),
       },
-      success_url: `${env.siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${env.siteUrl}/collection`,
+      success_url: `${base}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${base}/collection`,
     });
 
     return NextResponse.json({ url: session.url });
