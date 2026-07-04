@@ -25,8 +25,8 @@ export function Nav() {
           <Link href="/collection" className="nav__link">
             Collection
           </Link>
-          <Link href="/#house" className="nav__link nav__link--hide-sm">
-            The House
+          <Link href="/our-story" className="nav__link">
+            Our Story
           </Link>
         </div>
 
