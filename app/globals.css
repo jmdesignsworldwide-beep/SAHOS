@@ -210,11 +210,15 @@ a {
   justify-content: center;
   pointer-events: none;
 }
-.route-curtain__mark {
-  color: #fff;
-  letter-spacing: 0.5em;
-  font-size: 0.9rem;
-  padding-left: 0.5em;
+/* The logo shown on the page-transition screen, rendered in WHITE (inverted).
+   The art is gold-on-black; `grayscale + brightness` washes the gold to white
+   and `screen` drops the black background over the dark screen. This is ONLY the
+   route transition — the welcome/intro logo stays gold (see .intro-logo). */
+.route-curtain__logo {
+  width: clamp(120px, 26vw, 200px);
+  height: auto;
+  filter: grayscale(1) brightness(2.4);
+  mix-blend-mode: screen;
 }
 .intro-overlay {
   position: fixed;

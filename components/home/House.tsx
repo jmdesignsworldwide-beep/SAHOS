@@ -28,7 +28,7 @@ export function House({
 
       <div>
         <FadeUp as="p" className="label" >
-          The House
+          Our Story
         </FadeUp>
         <FadeUp as="h2" className="house__title" delay={0.05}>
           A confession, wrapped in ceremony.
