@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { SmartImage } from '@/components/ui/SmartImage';
+import { SharedImage } from '@/components/product/SharedImage';
 import { ClipReveal } from '@/components/motion/Reveal';
 import { formatPrice, twoDigit } from '@/lib/format';
 import { modelImages } from '@/lib/products';
@@ -16,10 +16,11 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
     <Link href={`/product/${product.slug}`} className="pcard" data-cursor="interactive">
       <ClipReveal className="pcard__media">
         <span className="pcard__index">{twoDigit(index + 1)}</span>
-        <SmartImage
-          src={first?.url ?? ''}
+        <SharedImage
+          slug={product.slug}
+          kind="card"
+          url={first?.url ?? ''}
           alt={product.name}
-          fill
           sizes="(max-width: 900px) 50vw, 33vw"
           placeholderLabel={product.name}
           tone="#EFEBE6"

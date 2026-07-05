@@ -918,6 +918,35 @@ a {
 .gallery__frame .smart-image-fallback {
   object-fit: cover;
 }
+
+/* =========================================================================
+   Shared-element transition (collection card ⇄ product hero)
+   ========================================================================= */
+/* The participating image sits in an absolutely-positioned box so it fills its
+   frame (card or hero). It hides while its slug is mid-flight, then cross-fades
+   in as the fixed clone lands. */
+.shared-media {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.32s ease;
+}
+.shared-media[data-shared-hidden] {
+  opacity: 0;
+}
+/* The fixed clone that flies between the two — above the nav, never clipped. */
+.shared-fly {
+  z-index: 250;
+  overflow: hidden;
+  pointer-events: none;
+  will-change: transform;
+  background: #efebe6;
+}
+.shared-fly img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .buy {
   padding: clamp(2rem, 4vw, 3rem) var(--edge);
 }

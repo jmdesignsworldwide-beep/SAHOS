@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       <div className="product">
         {/* LV/Gucci layout: model gallery (hero) + sticky buy panel */}
         <div className="product__main">
-          <Gallery images={gallery} name={product.name} />
+          <Gallery images={gallery} name={product.name} slug={product.slug} />
           <BuyPanel product={product} />
         </div>
 

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { isSizeAvailable, type Product, type Size } from '@/lib/types';
 import { formatPrice } from '@/lib/format';
 import { swatchFor } from '@/lib/colors';
 import { modelImages } from '@/lib/products';
 import { useBag } from '@/components/providers/BagProvider';
+import { useSharedTransition } from '@/components/providers/SharedTransition';
 import { MagneticButton } from '@/components/ui/MagneticButton';
 import { Accordion } from '@/components/product/Accordion';
 import { SizeGuide } from '@/components/product/SizeGuide';
@@ -14,9 +16,29 @@ import { SizeGuide } from '@/components/product/SizeGuide';
 // bag · accordions. Small type, grey, lots of air — the LV pattern.
 export function BuyPanel({ product }: { product: Product }) {
   const { add } = useBag();
+  const { willReceiveFly, flyingSlug } = useSharedTransition();
+  const reduced = useReducedMotion();
   const [size, setSize] = useState<Size | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
   const [error, setError] = useState(false);
+
+  // When the hero grows in via the shared-element transition, hold the buy panel
+  // back until the morph itself completes, then let it settle in — so the focus
+  // is the photo first. Tied to the actual fly (not a guessed delay); on a direct
+  // load there's no fly, so it eases in immediately. Safety timeout so it can
+  // never stay hidden if the fly is missed.
+  const [awaiting, setAwaiting] = useState(() => willReceiveFly(product.slug));
+  const sawFly = useRef(false);
+  useEffect(() => {
+    if (!awaiting) return;
+    if (flyingSlug === product.slug) sawFly.current = true;
+    if (sawFly.current && flyingSlug !== product.slug) {
+      setAwaiting(false);
+      return;
+    }
+    const t = setTimeout(() => setAwaiting(false), 1600);
+    return () => clearTimeout(t);
+  }, [awaiting, flyingSlug, product.slug]);
 
   const hero = modelImages(product)[0]?.url ?? '';
 
@@ -38,7 +60,12 @@ export function BuyPanel({ product }: { product: Product }) {
   };
 
   return (
-    <aside className="buy">
+    <motion.aside
+      className="buy"
+      initial={reduced ? false : { opacity: 0, y: 14 }}
+      animate={reduced ? { opacity: 1, y: 0 } : { opacity: awaiting ? 0 : 1, y: awaiting ? 14 : 0 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: awaiting ? 0 : 0.08 }}
+    >
       <div className="buy__inner">
         <p className="buy__ref">Ref. {product.factoryRef}</p>
         <h1 className="buy__name">{product.name}</h1>
@@ -126,6 +153,6 @@ export function BuyPanel({ product }: { product: Product }) {
       </div>
 
       <SizeGuide open={guideOpen} onClose={() => setGuideOpen(false)} pieceName={product.name} />
-    </aside>
+    </motion.aside>
   );
 }

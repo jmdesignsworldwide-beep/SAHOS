@@ -22,6 +22,11 @@ export function PageTransition({ children }: { children: ReactNode }) {
   // Detect a real navigation by comparing against the previously rendered path.
   const prevPath = useRef(pathname);
   const isNavigation = prevPath.current !== pathname;
+  // A shared-element navigation (to/from a product page) is carried by the image
+  // morph, so we suppress the dark curtain + content crossfade for it — the photo
+  // growing/shrinking IS the transition. Every other route keeps the curtain.
+  const isSharedNav =
+    prevPath.current.startsWith('/product/') || pathname.startsWith('/product/');
   useEffect(() => {
     prevPath.current = pathname;
   });
@@ -35,16 +40,16 @@ export function PageTransition({ children }: { children: ReactNode }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={pathname}
-          initial={reduced ? false : { opacity: 0 }}
+          initial={reduced || isSharedNav ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={reduced ? undefined : { opacity: 0 }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
+          exit={reduced || isSharedNav ? undefined : { opacity: 0 }}
+          transition={{ duration: isSharedNav ? 0 : 0.4, ease: 'easeInOut' }}
         >
           {children}
         </motion.div>
       </AnimatePresence>
 
-      {!reduced && (
+      {!reduced && !isSharedNav && (
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={`curtain-${pathname}`}
