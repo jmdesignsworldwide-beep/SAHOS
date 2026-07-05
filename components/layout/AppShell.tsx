@@ -4,6 +4,7 @@ import { type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
 import { BagProvider } from '@/components/providers/BagProvider';
+import { SharedTransitionProvider } from '@/components/providers/SharedTransition';
 import { PageTransition } from '@/components/providers/PageTransition';
 import { MagneticCursor } from '@/components/motion/MagneticCursor';
 import { Nav } from '@/components/layout/Nav';
@@ -24,10 +25,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SmoothScrollProvider>
       <BagProvider>
-        <MagneticCursor />
-        <Nav />
-        <BagDrawer />
-        <PageTransition>{children}</PageTransition>
+        <SharedTransitionProvider>
+          <MagneticCursor />
+          <Nav />
+          <BagDrawer />
+          <PageTransition>{children}</PageTransition>
+        </SharedTransitionProvider>
       </BagProvider>
     </SmoothScrollProvider>
   );
