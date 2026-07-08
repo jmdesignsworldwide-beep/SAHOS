@@ -27,6 +27,14 @@ const nextConfig = {
     ],
   },
   experimental: {
+    // Raise the Server Action body cap (default 1MB) so product-photo uploads
+    // (which still post the file through a Server Action) accept normal photos.
+    // NOTE: site images (/portal/imagenes) bypass this entirely — they upload
+    // straight to Storage via a signed URL — so they aren't bound by the ~4.5MB
+    // Vercel function-body ceiling either.
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
     // The product route scans public/products/<slug>/ with fs to auto-detect
     // model-N.jpg photos. On Vercel those public files must be traced into the
     // route's serverless function so fs.existsSync can see them at runtime.

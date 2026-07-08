@@ -3,7 +3,32 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveSiteImageAction } from '@/app/portal/actions';
+import { createSiteImageUpload, saveSiteImageMeta } from '@/app/portal/actions';
+import { getBrowserSupabase } from '@/lib/supabase/browser';
+
+const BUCKET = 'product-images';
+const MAX_BYTES = 25 * 1024 * 1024; // 25MB — clean hero photos are large
+const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+
+// Returns a human error string if the file can't be used, else null.
+function validateFile(file: File): string | null {
+  const name = file.name.toLowerCase();
+  const isHeic =
+    file.type === 'image/heic' ||
+    file.type === 'image/heif' ||
+    name.endsWith('.heic') ||
+    name.endsWith('.heif');
+  if (isHeic) {
+    return 'Las fotos HEIC del iPhone no se ven en la web. En tu iPhone: Ajustes → Cámara → Formatos → «Más compatible», o abre la foto y expórtala como JPG, y vuelve a subirla.';
+  }
+  if (!ALLOWED.includes(file.type)) {
+    return 'Formato no soportado. Usa JPG, PNG o WebP.';
+  }
+  if (file.size > MAX_BYTES) {
+    return `La imagen es muy grande (${(file.size / 1024 / 1024).toFixed(1)}MB). El máximo es 25MB.`;
+  }
+  return null;
+}
 
 export interface SiteImageItem {
   key: string;
@@ -17,6 +42,8 @@ export interface SiteImageItem {
   hasCustom: boolean;
 }
 
+type Phase = 'idle' | 'uploading' | 'saving';
+
 function SlotCard({ item }: { item: SiteImageItem }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -25,9 +52,9 @@ function SlotCard({ item }: { item: SiteImageItem }) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [alt, setAlt] = useState(item.alt);
+  const [phase, setPhase] = useState<Phase>('idle');
   const [msg, setMsg] = useState<{ ok?: boolean; text: string } | null>(null);
 
-  // Revoke object URLs to avoid leaks.
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview);
@@ -40,13 +67,22 @@ function SlotCard({ item }: { item: SiteImageItem }) {
   const pickFile = (f: File | null) => {
     setMsg(null);
     if (preview) URL.revokeObjectURL(preview);
-    if (f) {
-      setFile(f);
-      setPreview(URL.createObjectURL(f));
-    } else {
+    if (!f) {
       setFile(null);
       setPreview(null);
+      return;
     }
+    const err = validateFile(f);
+    if (err) {
+      // Reject clearly and don't stage the file.
+      setFile(null);
+      setPreview(null);
+      if (inputRef.current) inputRef.current.value = '';
+      setMsg({ text: err });
+      return;
+    }
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
   };
 
   const reset = () => {
@@ -60,26 +96,73 @@ function SlotCard({ item }: { item: SiteImageItem }) {
     if (!canSave) return;
     setMsg(null);
     startTransition(async () => {
-      const fd = new FormData();
-      fd.set('slot_key', item.key);
-      fd.set('alt_text', alt);
-      if (file) fd.set('file', file);
-      const res = await saveSiteImageAction(fd);
-      if (res?.error) {
-        setMsg({ text: res.error });
-        return;
+      try {
+        let uploadedUrl: string | undefined;
+
+        if (file) {
+          // 1) ask the server for a signed upload URL (server picks the path).
+          setPhase('uploading');
+          const ticketFd = new FormData();
+          ticketFd.set('slot_key', item.key);
+          ticketFd.set('content_type', file.type);
+          const ticket = await createSiteImageUpload(ticketFd);
+          if (ticket?.error || !ticket?.path || !ticket?.token) {
+            setPhase('idle');
+            setMsg({ text: ticket?.error || 'No se pudo iniciar la subida.' });
+            return;
+          }
+
+          // 2) push the bytes straight to Storage (bypasses function limits).
+          const supa = getBrowserSupabase();
+          if (!supa) {
+            setPhase('idle');
+            setMsg({ text: 'Almacenamiento no configurado.' });
+            return;
+          }
+          const { error: upErr } = await supa.storage
+            .from(BUCKET)
+            .uploadToSignedUrl(ticket.path, ticket.token, file, { contentType: file.type });
+          if (upErr) {
+            setPhase('idle');
+            setMsg({ text: `No se pudo subir la imagen: ${upErr.message}` });
+            return;
+          }
+          uploadedUrl = ticket.publicUrl;
+        }
+
+        // 3) persist the new URL (if any) + alt text.
+        setPhase('saving');
+        const metaFd = new FormData();
+        metaFd.set('slot_key', item.key);
+        metaFd.set('alt_text', alt);
+        if (uploadedUrl) metaFd.set('image_url', uploadedUrl);
+        const res = await saveSiteImageMeta(metaFd);
+        if (res?.error) {
+          setPhase('idle');
+          setMsg({ text: res.error });
+          return;
+        }
+
+        // success — clear the staged selection; refreshed data is the new state
+        if (preview) URL.revokeObjectURL(preview);
+        setFile(null);
+        setPreview(null);
+        if (inputRef.current) inputRef.current.value = '';
+        setPhase('idle');
+        setMsg({ ok: true, text: 'Guardado' });
+        router.refresh();
+      } catch (e) {
+        // Never fail silently — surface anything unexpected.
+        setPhase('idle');
+        setMsg({
+          text: e instanceof Error ? e.message : 'Error inesperado al subir. Inténtalo de nuevo.',
+        });
       }
-      // clear the pending selection; refreshed data becomes the new "current"
-      if (preview) URL.revokeObjectURL(preview);
-      setFile(null);
-      setPreview(null);
-      if (inputRef.current) inputRef.current.value = '';
-      setMsg({ ok: true, text: 'Guardado' });
-      router.refresh();
     });
   };
 
   const shown = preview ?? item.currentSrc;
+  const btnLabel = !pending ? 'Guardar' : phase === 'uploading' ? 'Subiendo…' : 'Guardando…';
 
   return (
     <div className="simg-card">
@@ -89,8 +172,11 @@ function SlotCard({ item }: { item: SiteImageItem }) {
         ) : (
           <span className="simg-card__empty">—</span>
         )}
-        {preview && <span className="simg-card__tag simg-card__tag--preview">Vista previa</span>}
-        {!preview && (
+        {pending && <span className="simg-card__tag simg-card__tag--busy">{btnLabel}</span>}
+        {!pending && preview && (
+          <span className="simg-card__tag simg-card__tag--preview">Vista previa</span>
+        )}
+        {!pending && !preview && (
           <span className={`simg-card__tag ${item.hasCustom ? 'is-custom' : 'is-default'}`}>
             {item.hasCustom ? 'Personalizada' : 'Por defecto'}
           </span>
@@ -115,7 +201,7 @@ function SlotCard({ item }: { item: SiteImageItem }) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif"
           hidden
           onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
         />
@@ -130,7 +216,7 @@ function SlotCard({ item }: { item: SiteImageItem }) {
             {file ? 'Cambiar archivo' : 'Elegir imagen'}
           </button>
           <button type="button" className="pbtn pbtn--primary" onClick={save} disabled={!canSave}>
-            {pending ? 'Guardando…' : 'Guardar'}
+            {btnLabel}
           </button>
           {(file || altChanged) && !pending && (
             <button type="button" className="simg-card__reset" onClick={reset}>
@@ -140,10 +226,8 @@ function SlotCard({ item }: { item: SiteImageItem }) {
         </div>
 
         {file && <span className="simg-card__file">{file.name}</span>}
-        <span className="simg-card__hint">JPG, PNG o WebP · máx 10MB</span>
-        {msg && (
-          <p className={`pmsg ${msg.ok ? 'pmsg--ok' : 'pmsg--error'}`}>{msg.text}</p>
-        )}
+        <span className="simg-card__hint">JPG, PNG o WebP · máx 25MB · (HEIC del iPhone no)</span>
+        {msg && <p className={`pmsg ${msg.ok ? 'pmsg--ok' : 'pmsg--error'}`}>{msg.text}</p>}
       </div>
     </div>
   );

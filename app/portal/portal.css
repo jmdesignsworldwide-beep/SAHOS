@@ -941,6 +941,10 @@
   background: #1f6b3a;
   color: #fff;
 }
+.simg-card__tag--busy {
+  background: #1a1a18;
+  color: #fff;
+}
 .simg-card__body {
   padding: 0.9rem 1rem 1.1rem;
   display: flex;

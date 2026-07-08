@@ -7,6 +7,7 @@ import { createSSRClient, getSessionUser } from '@/lib/supabase/ssr';
 import { requireUser } from '@/lib/admin';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { isSiteImageSlot } from '@/lib/site-images';
+import { env } from '@/lib/env';
 
 const BUCKET = 'product-images';
 // Site images live in the same bucket under this prefix (no new bucket needed).
@@ -358,10 +359,53 @@ export async function updateMessageStatusAction(formData: FormData): Promise<Act
 
 // --------------------------------------------------------------------------
 // Site images (heros, campaign, packaging, Our Story) — one row per slot_key.
-// Lets the owner replace ANY fixed site image without touching code. Guarded so
-// any failure surfaces as a clean inline message; whitelist-checks the slot_key.
+// Lets the owner replace ANY fixed site image without touching code.
+//
+// Upload flow (two steps) — the file NEVER passes through a Server Action /
+// serverless function body (Next caps that at 1MB, Vercel at ~4.5MB, which was
+// silently failing the owner's large hero photos). Instead:
+//   1) createSiteImageUpload → the server (authenticated, RLS-governed) picks a
+//      sanitized path and returns a short-lived SIGNED UPLOAD URL/token.
+//   2) the browser uploads the bytes straight to Storage with that token.
+//   3) saveSiteImageMeta → the server records the resulting public URL.
+// service_role is never used or exposed; every step is whitelist-validated.
 // --------------------------------------------------------------------------
-export async function saveSiteImageAction(formData: FormData): Promise<ActionState> {
+export interface UploadTicket extends ActionState {
+  path?: string;
+  token?: string;
+  publicUrl?: string;
+}
+
+export async function createSiteImageUpload(formData: FormData): Promise<UploadTicket> {
+  try {
+    await requireUser();
+    const ip = clientIp(headers());
+    const limit = rateLimit(`site-image:${ip}`, 30, 60_000);
+    if (!limit.ok) return { error: 'Demasiadas solicitudes. Espera un momento.' };
+
+    const slotKey = str(formData.get('slot_key'), 64);
+    if (!isSiteImageSlot(slotKey)) return { error: 'Slot inválido.' };
+
+    const contentType = str(formData.get('content_type'), 100);
+    const ext = ALLOWED_MIME[contentType];
+    if (!ext) return { error: 'Formato no soportado. Usa JPG, PNG o WebP (el HEIC del iPhone no sirve).' };
+
+    // Server-controlled, sanitized, unguessable path: site/<slot>/<uuid>.<ext>.
+    const key = `${SITE_PREFIX}/${slotKey}/${crypto.randomUUID()}.${ext}`;
+    const supabase = createSSRClient(); // authenticated admin — RLS still applies
+    const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(key);
+    if (error || !data) {
+      return { error: `No se pudo iniciar la subida: ${error?.message ?? 'inténtalo de nuevo'}` };
+    }
+
+    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(key);
+    return { ok: true, path: data.path, token: data.token, publicUrl: pub.publicUrl };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo iniciar la subida.' };
+  }
+}
+
+export async function saveSiteImageMeta(formData: FormData): Promise<ActionState> {
   try {
     await requireUser();
     const ip = clientIp(headers());
@@ -374,55 +418,38 @@ export async function saveSiteImageAction(formData: FormData): Promise<ActionSta
     if (!isSiteImageSlot(slotKey)) return { error: 'Slot inválido.' };
     const altText = str(formData.get('alt_text'), 300);
 
-    // Current row (to keep the URL on an alt-only save + clean up the old file).
+    // Optional new image URL — must be one of OUR public Storage URLs under the
+    // site/ prefix, so a client can never point a slot at an arbitrary URL.
+    const rawUrl = str(formData.get('image_url'), 600);
+    let newUrl: string | null = null;
+    if (rawUrl) {
+      const validPrefix = `${env.supabaseUrl}/storage/v1/object/public/${BUCKET}/${SITE_PREFIX}/`;
+      if (!rawUrl.startsWith(validPrefix)) return { error: 'URL de imagen inválida.' };
+      newUrl = rawUrl;
+    }
+
     const { data: existing } = await supabase
       .from('site_images')
       .select('image_url')
       .eq('slot_key', slotKey)
       .maybeSingle();
-    let imageUrl: string | null = existing?.image_url ?? null;
 
-    const file = formData.get('file');
-    let uploadedKey: string | null = null;
-    if (file instanceof File && file.size > 0) {
-      if (file.size > MAX_UPLOAD_BYTES) return { error: 'La imagen supera el máximo de 10MB.' };
-      const ext = ALLOWED_MIME[file.type];
-      if (!ext) return { error: 'Formato no permitido. Usa JPG, PNG o WebP.' };
-
-      // Sanitized, unguessable key: site/<slot>/<uuid>.<ext>. slot_key is
-      // whitelisted above, so the path is fully controlled by the server.
-      const key = `${SITE_PREFIX}/${slotKey}/${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(key, file, { contentType: file.type, upsert: false });
-      if (upErr) return { error: `No se pudo subir: ${upErr.message}` };
-
-      const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(key);
-      imageUrl = pub.publicUrl;
-      uploadedKey = key;
-    }
-
-    if (!uploadedKey && !existing) {
-      // Nothing to write (no file and the slot has no row yet) — treat alt-only
-      // saves as valid by creating the row so the value persists.
-    }
+    // No new file → keep the current image (alt-only save).
+    const finalUrl = newUrl ?? existing?.image_url ?? null;
 
     const { error: upsertErr } = await supabase.from('site_images').upsert(
       {
         slot_key: slotKey,
-        image_url: imageUrl,
+        image_url: finalUrl,
         alt_text: altText || null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'slot_key' }
     );
-    if (upsertErr) {
-      if (uploadedKey) await supabase.storage.from(BUCKET).remove([uploadedKey]); // roll back
-      return { error: `No se pudo guardar: ${upsertErr.message}` };
-    }
+    if (upsertErr) return { error: `No se pudo guardar: ${upsertErr.message}` };
 
-    // Best-effort cleanup of the previously stored file (only our site/ objects).
-    if (uploadedKey && existing?.image_url) {
+    // Best-effort cleanup of the replaced file (only our own site/ objects).
+    if (newUrl && existing?.image_url && existing.image_url !== newUrl) {
       const oldPath = storagePathFromUrl(existing.image_url);
       if (oldPath && oldPath.startsWith(`${SITE_PREFIX}/`)) {
         await supabase.storage.from(BUCKET).remove([oldPath]);
