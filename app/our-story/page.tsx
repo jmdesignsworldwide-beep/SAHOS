@@ -65,7 +65,7 @@ export default async function OurStoryPage() {
               Born and raised in New York with a passion for fashion, I turned my hardships into
               creativity. My goal for SAHOS is to show women that fashion can still be intentional
               and made for every body. I want women to feel confident and flaunt their best
-              features. It took nearly three years of trial and error to perfect this collection,
+              features. It took nearly two years of trial and error to perfect this collection,
               and I&rsquo;m committed to creating clothing that truly makes you feel your best.
             </FadeUp>
           </div>

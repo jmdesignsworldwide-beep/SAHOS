@@ -17,7 +17,7 @@ export function CollectionGrid({ products = PRODUCTS }: { products?: Product[] }
         </FadeUp>
         <FadeUp as="div" delay={0.05}>
           <Link href="/collection" className="link-underline label">
-            View all — {products.length} pieces
+            View all
           </Link>
         </FadeUp>
       </div>

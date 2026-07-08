@@ -35,7 +35,7 @@ export function Nav() {
         </Link>
 
         <div className="nav__group nav__group--end">
-          <Link href="/#newsletter" className="nav__link nav__link--hide-sm">
+          <Link href="/contact" className="nav__link nav__link--hide-sm">
             Contact
           </Link>
           <button className="nav__link nav__bag" onClick={open} aria-label="Open bag">

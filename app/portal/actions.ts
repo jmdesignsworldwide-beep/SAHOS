@@ -332,6 +332,31 @@ export async function uploadImageAction(formData: FormData): Promise<ActionState
 }
 
 // --------------------------------------------------------------------------
+// Contact messages — the owner marks new → read → replied
+// --------------------------------------------------------------------------
+const MESSAGE_STATUS = ['new', 'read', 'replied'] as const;
+
+export async function updateMessageStatusAction(formData: FormData): Promise<ActionState> {
+  try {
+    await requireUser();
+    const supabase = createSSRClient();
+
+    const id = str(formData.get('id'), 64);
+    const status = str(formData.get('status'), 12) as (typeof MESSAGE_STATUS)[number];
+    if (!id) return { error: 'Falta el mensaje.' };
+    if (!MESSAGE_STATUS.includes(status)) return { error: 'Estado inválido.' };
+
+    const { error } = await supabase.from('contact_messages').update({ status }).eq('id', id);
+    if (error) return { error: `No se pudo actualizar: ${error.message}` };
+
+    revalidatePath('/portal/mensajes');
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo actualizar el mensaje.' };
+  }
+}
+
+// --------------------------------------------------------------------------
 // Site images (heros, campaign, packaging, Our Story) — one row per slot_key.
 // Lets the owner replace ANY fixed site image without touching code. Guarded so
 // any failure surfaces as a clean inline message; whitelist-checks the slot_key.

@@ -3,19 +3,18 @@
 import Link from 'next/link';
 import { SharedImage } from '@/components/product/SharedImage';
 import { ClipReveal } from '@/components/motion/Reveal';
-import { formatPrice, twoDigit } from '@/lib/format';
+import { formatPrice } from '@/lib/format';
 import { modelImages } from '@/lib/products';
 import type { Product } from '@/lib/types';
 
 // Collection card (spec §4.1, §4.2): image-clip reveal on enter, slow zoom on
-// hover; the piece name + price sit beneath.
-export function ProductCard({ product, index }: { product: Product; index: number }) {
+// hover; the piece name + price sit beneath. (No corner index numbers.)
+export function ProductCard({ product }: { product: Product; index?: number }) {
   const [first] = modelImages(product);
 
   return (
     <Link href={`/product/${product.slug}`} className="pcard" data-cursor="interactive">
       <ClipReveal className="pcard__media">
-        <span className="pcard__index">{twoDigit(index + 1)}</span>
         <SharedImage
           slug={product.slug}
           kind="card"

@@ -392,7 +392,24 @@ a {
 .hero__scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0) 45%);
+  /* darken bottom (for the title) and, subtly, the top (for the logo) */
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0) 42%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0) 26%);
+}
+/* The real SAHOS logo overlaid at the top of the hero, in WHITE. The art is
+   gold-on-black; grayscale+brightness washes it white and `screen` drops the
+   black so only the mark shows over the founder photo. */
+.hero__logo {
+  position: absolute;
+  top: calc(var(--nav-h) + clamp(1.25rem, 5vh, 3.5rem));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: clamp(120px, 20vw, 190px);
+  height: auto;
+  filter: grayscale(1) brightness(3);
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 .hero__content {
   position: relative;
@@ -527,17 +544,6 @@ a {
 .pcard:hover .pcard__media img,
 .pcard:hover .pcard__media .smart-image-fallback {
   transform: scale(1.04);
-}
-.pcard__index {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  z-index: 2;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  color: #767470;
-  mix-blend-mode: difference;
-  color: #fff;
 }
 .pcard__meta {
   display: flex;
@@ -880,6 +886,16 @@ a {
   font-weight: 300;
   font-size: clamp(2.5rem, 7vw, 5.5rem);
   line-height: 1;
+}
+/* the collection headline is a longer brand phrase — scale it for balance */
+.page-head__title--collection {
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 1.08;
+  max-width: 20ch;
+  margin-inline: auto;
+}
+.page-head__link-wrap {
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
 }
 
 /* =========================================================================
@@ -1375,4 +1391,93 @@ a {
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: #767470;
+}
+
+/* =========================================================================
+   Contact us (customer service) — distinct from the newsletter
+   ========================================================================= */
+.contact {
+  max-width: 620px;
+  margin-inline: auto;
+  padding: 0 var(--edge) clamp(4rem, 10vw, 8rem);
+}
+.contact__intro {
+  color: #767470;
+  text-align: center;
+  max-width: 48ch;
+  margin: 0 auto clamp(2.5rem, 5vw, 3.5rem);
+  line-height: 1.7;
+}
+.contact__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.contact__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.contact__field > span {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #767470;
+}
+.contact__field input,
+.contact__field textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #d8d6d2;
+  background: transparent;
+  padding: 0.65rem 0.1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #1a1a18;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+.contact__field textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+.contact__field input:focus,
+.contact__field textarea:focus {
+  border-color: #1a1a18;
+}
+.contact__field input::placeholder,
+.contact__field textarea::placeholder {
+  color: #b8b4ac;
+}
+.contact__form .btn-fill {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+}
+.contact__error {
+  font-size: 0.82rem;
+  color: #6b1f2a;
+  margin: 0;
+}
+.contact__done {
+  text-align: center;
+  padding: clamp(2rem, 6vw, 4rem) 0;
+}
+.contact__done-title {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0 0 1rem;
+}
+.contact__done-sub {
+  color: #767470;
+  max-width: 42ch;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+@media (max-width: 640px) {
+  .contact__form .btn-fill {
+    align-self: stretch;
+    justify-content: center;
+  }
 }

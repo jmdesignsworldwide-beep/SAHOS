@@ -25,9 +25,9 @@ export const SITE_IMAGE_SLOTS: SiteImageSlot[] = [
   {
     key: 'home_hero',
     group: 'Inicio',
-    label: 'Hero principal',
-    fallback: '/products/campaign/hero.jpg',
-    defaultAlt: 'SAHOS — The Marilyn Collection campaign',
+    label: 'Hero principal (fundadora)',
+    fallback: '/home/hero-founder.jpg',
+    defaultAlt: 'SAHOS — the founder',
   },
   {
     key: 'campaign_1',
@@ -39,7 +39,7 @@ export const SITE_IMAGE_SLOTS: SiteImageSlot[] = [
   {
     key: 'house_packaging',
     group: 'Inicio',
-    label: 'The House — Packaging',
+    label: 'Packaging',
     fallback: '/products/house/packaging.jpg',
     defaultAlt: 'SAHOS velvet hangers and packaging',
   },

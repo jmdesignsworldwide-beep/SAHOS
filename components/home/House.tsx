@@ -3,7 +3,8 @@
 import { SmartImage } from '@/components/ui/SmartImage';
 import { ClipReveal, FadeUp } from '@/components/motion/Reveal';
 
-// The House (spec §4.1): the velvet hangers / packaging framed as ceremony.
+// "Our Story" home section (spec §4.1): the velvet hangers / packaging framed
+// as ceremony. (Eyebrow reads "Our Story"; kept the #house id/section shape.)
 // Image is portal-managed (site_images slot "house_packaging"); props default
 // to the current file so nothing breaks if unset.
 export function House({
@@ -21,7 +22,7 @@ export function House({
           alt={alt}
           fill
           sizes="(max-width: 900px) 100vw, 55vw"
-          placeholderLabel="The House"
+          placeholderLabel="Our Story"
           tone="#EAE6E1"
         />
       </ClipReveal>
