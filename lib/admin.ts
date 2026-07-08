@@ -142,3 +142,40 @@ export async function adminOrderCounts(): Promise<Record<string, number>> {
   for (const row of data ?? []) counts[(row as any).fulfillment_status] = (counts[(row as any).fulfillment_status] ?? 0) + 1;
   return counts;
 }
+
+// ---------------------------------------------------------------------------
+// Contact messages (customer service)
+// ---------------------------------------------------------------------------
+export type MessageStatus = 'new' | 'read' | 'replied';
+
+export interface AdminMessage {
+  id: string;
+  name: string | null;
+  email: string;
+  message: string;
+  status: MessageStatus;
+  created_at: string;
+}
+
+/** All contact messages, newest first. */
+export async function adminListMessages(): Promise<AdminMessage[]> {
+  const supabase = createSSRClient();
+  const { data, error } = await supabase
+    .from('contact_messages')
+    .select('id,name,email,message,status,created_at')
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AdminMessage[];
+}
+
+/** Number of unread ('new') messages, for the nav badge. */
+export async function adminUnreadMessageCount(): Promise<number> {
+  const supabase = createSSRClient();
+  const { count, error } = await supabase
+    .from('contact_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'new');
+  if (error) return 0;
+  return count ?? 0;
+}

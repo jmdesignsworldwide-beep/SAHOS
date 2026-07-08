@@ -38,3 +38,34 @@ export function parseEmail(input: unknown): string {
   if (trimmed.length > 254 || !EMAIL_RE.test(trimmed)) throw new Error('Invalid email');
   return trimmed;
 }
+
+export interface CleanContact {
+  name: string;
+  email: string;
+  message: string;
+}
+
+/** Drop NUL bytes (rejected by Postgres text) + trim. React escapes on render,
+ *  so no further stripping is needed to store/display the message safely. */
+function sanitizeText(v: string): string {
+  // eslint-disable-next-line no-control-regex
+  return v.replace(/\0/g, '').trim();
+}
+
+// Contact-us message (customer service). Server-side validated + sanitized
+// before it ever reaches the DB. Name is optional; email + message required.
+export function parseContact(input: unknown): CleanContact {
+  if (typeof input !== 'object' || input === null) throw new Error('Invalid payload');
+  const { name, email, message } = input as Record<string, unknown>;
+
+  const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (cleanEmail.length > 254 || !EMAIL_RE.test(cleanEmail)) throw new Error('Invalid email');
+
+  const cleanMessage = typeof message === 'string' ? sanitizeText(message) : '';
+  if (cleanMessage.length < 2) throw new Error('Message is too short');
+  if (cleanMessage.length > 4000) throw new Error('Message is too long');
+
+  const cleanName = typeof name === 'string' ? sanitizeText(name).slice(0, 120) : '';
+
+  return { name: cleanName, email: cleanEmail, message: cleanMessage };
+}

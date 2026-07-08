@@ -61,8 +61,8 @@ export function Footer() {
         </div>
         <nav className="footer__links">
           <Link href="/collection">Collection</Link>
-          <Link href="/#house">The House</Link>
-          <Link href="/#newsletter">Contact</Link>
+          <Link href="/our-story">Our Story</Link>
+          <Link href="/contact">Contact</Link>
         </nav>
         <div className="footer__legal">
           <p>© {2026} SAHOS. All rights reserved.</p>

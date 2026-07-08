@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { fetchAllProducts } from '@/lib/catalog';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Footer } from '@/components/layout/Footer';
@@ -21,8 +22,13 @@ export default async function CollectionPage() {
         <FadeUp as="p" className="page-head__eyebrow label">
           The Marilyn Collection
         </FadeUp>
-        <FadeUp as="h1" className="page-head__title" delay={0.05}>
-          Five pieces.
+        <FadeUp as="h1" className="page-head__title page-head__title--collection" delay={0.05}>
+          Old Hollywood glamour meets vintage allure
+        </FadeUp>
+        <FadeUp as="p" delay={0.1} className="page-head__link-wrap">
+          <Link href="/collection" className="link-underline label">
+            The Collection — View all
+          </Link>
         </FadeUp>
       </header>
 

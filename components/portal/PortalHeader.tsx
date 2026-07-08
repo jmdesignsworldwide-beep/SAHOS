@@ -11,6 +11,7 @@ export function PortalHeader() {
       <nav className="phead__nav">
         <Link href="/portal/dashboard">Dashboard</Link>
         <Link href="/portal/pedidos">Pedidos</Link>
+        <Link href="/portal/mensajes">Mensajes</Link>
         <Link href="/portal/inventario">Inventario</Link>
         <Link href="/portal/productos">Productos</Link>
         <Link href="/portal/imagenes">Imágenes</Link>

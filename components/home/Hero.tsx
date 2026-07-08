@@ -1,16 +1,19 @@
 'use client';
 
+import Image from 'next/image';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { SplitReveal } from '@/components/motion/SplitReveal';
 import { useParallax } from '@/hooks/useReveal';
 
-// Full-bleed editorial hero (spec §4.1). Model image is the hero; the title
-// reveals letter-by-letter; the image drifts on a scrubbed parallax. The image
-// is portal-managed (site_images slot "home_hero"); props default to the
-// current file so nothing breaks if unset.
+// Full-bleed editorial hero (spec §4.1). The founder image is the hero; the
+// title reveals letter-by-letter; the image drifts on a scrubbed parallax. The
+// image is portal-managed (site_images slot "home_hero"); props default to the
+// marked placeholder so the owner drops the clean founder photo in from the
+// portal. The REAL SAHOS logo is overlaid at the top (in white) — never any
+// burned-in watermark from the photo itself.
 export function Hero({
-  src = '/products/campaign/hero.jpg',
-  alt = 'SAHOS — The Marilyn Collection campaign',
+  src = '/home/hero-founder.jpg',
+  alt = 'SAHOS — the founder',
 }: {
   src?: string;
   alt?: string;
@@ -26,15 +29,27 @@ export function Hero({
           fill
           priority
           sizes="100vw"
-          placeholderLabel="The Marilyn Collection"
+          placeholderLabel="SAHOS"
           tone="#E9E5E0"
         />
       </div>
       <div className="hero__scrim" />
 
+      {/* The brand mark, rendered in white over the photo — the real logo from
+          the repo, not any text baked into the image. */}
+      <Image
+        src="/brand/sahos-logo.jpg"
+        alt="SAHOS"
+        width={360}
+        height={322}
+        priority
+        unoptimized
+        className="hero__logo"
+      />
+
       <div className="hero__content">
         <p className="hero__eyebrow label">The Marilyn Collection</p>
-        <SplitReveal text="Soft glamour, made to be seen." className="hero__title" />
+        <SplitReveal text="Not a wardrobe. A confession." className="hero__title" />
       </div>
 
       <div className="hero__scroll">Scroll</div>
