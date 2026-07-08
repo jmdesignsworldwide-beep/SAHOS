@@ -1,26 +1,29 @@
 'use client';
 
-import { SmartImage } from '@/components/ui/SmartImage';
+import { SiteMedia } from '@/components/ui/SiteMedia';
 import { ClipReveal, FadeUp } from '@/components/motion/Reveal';
+import type { ResolvedMedia } from '@/lib/site-images';
 
 // "Our Story" home section (spec §4.1): the velvet hangers / packaging framed
 // as ceremony. (Eyebrow reads "Our Story"; kept the #house id/section shape.)
-// Image is portal-managed (site_images slot "house_packaging"); props default
-// to the current file so nothing breaks if unset.
-export function House({
-  src = '/products/house/packaging.jpg',
-  alt = 'SAHOS velvet hangers and packaging',
-}: {
-  src?: string;
-  alt?: string;
-} = {}) {
+// Media is portal-managed (site_images slot "house_packaging"); defaults to the
+// current file so nothing breaks if unset.
+const DEFAULT_MEDIA: ResolvedMedia = {
+  type: 'image',
+  src: '/products/house/packaging.jpg',
+  alt: 'SAHOS velvet hangers and packaging',
+  poster: '/products/house/packaging.jpg',
+};
+
+export function House({ media = DEFAULT_MEDIA }: { media?: ResolvedMedia } = {}) {
   return (
     <section className="house" id="house">
       <ClipReveal className="house__media">
-        <SmartImage
-          src={src}
-          alt={alt}
-          fill
+        <SiteMedia
+          type={media.type}
+          src={media.src}
+          poster={media.poster}
+          alt={media.alt}
           sizes="(max-width: 900px) 100vw, 55vw"
           placeholderLabel="Our Story"
           tone="#EAE6E1"

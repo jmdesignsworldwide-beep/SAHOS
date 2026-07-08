@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { Footer } from '@/components/layout/Footer';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
-import { SmartImage } from '@/components/ui/SmartImage';
+import { SiteMedia } from '@/components/ui/SiteMedia';
 import { getSiteImageMap } from '@/lib/site-images.server';
-import { resolveSiteImage } from '@/lib/site-images';
+import { resolveSiteMedia } from '@/lib/site-images';
 
 // Reflect portal image edits without a redeploy.
 export const dynamic = 'force-dynamic';
@@ -22,9 +22,9 @@ export const metadata: Metadata = {
 // falling back to the /public files until the owner uploads originals.
 export default async function OurStoryPage() {
   const siteImages = await getSiteImageMap();
-  const founder = resolveSiteImage(siteImages, 'our_story_founder');
-  const philosophy = resolveSiteImage(siteImages, 'our_story_philosophy');
-  const design = resolveSiteImage(siteImages, 'our_story_design');
+  const founder = resolveSiteMedia(siteImages, 'our_story_founder');
+  const philosophy = resolveSiteMedia(siteImages, 'our_story_philosophy');
+  const design = resolveSiteMedia(siteImages, 'our_story_design');
 
   return (
     <>
@@ -47,10 +47,11 @@ export default async function OurStoryPage() {
         {/* Section 2 — Founder story · image left / text right */}
         <section className="story-row">
           <ClipReveal className="story-figure">
-            <SmartImage
+            <SiteMedia
+              type={founder.type}
               src={founder.src}
+              poster={founder.poster}
               alt={founder.alt}
-              fill
               sizes="(max-width: 900px) 100vw, 45vw"
               placeholderLabel="Founder"
               tone="#EAE6E1"
@@ -74,10 +75,11 @@ export default async function OurStoryPage() {
         {/* Section 3 — Philosophy · text left / image right */}
         <section className="story-row story-row--reverse">
           <ClipReveal className="story-figure">
-            <SmartImage
+            <SiteMedia
+              type={philosophy.type}
               src={philosophy.src}
+              poster={philosophy.poster}
               alt={philosophy.alt}
-              fill
               sizes="(max-width: 900px) 100vw, 45vw"
               placeholderLabel="Philosophy"
               tone="#EAE6E1"
@@ -113,10 +115,11 @@ export default async function OurStoryPage() {
         {/* Section 5 — Design philosophy · image left / text right */}
         <section className="story-row">
           <ClipReveal className="story-figure">
-            <SmartImage
+            <SiteMedia
+              type={design.type}
               src={design.src}
+              poster={design.poster}
               alt={design.alt}
-              fill
               sizes="(max-width: 900px) 100vw, 45vw"
               placeholderLabel="Design"
               tone="#EAE6E1"

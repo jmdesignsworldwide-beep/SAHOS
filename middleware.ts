@@ -24,6 +24,9 @@ export async function middleware(request: NextRequest) {
     `script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ''} https://js.stripe.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com",
+    // Portal-managed site videos stream from Supabase Storage; blob: covers the
+    // portal's local preview (URL.createObjectURL) before upload.
+    "media-src 'self' blob: https://*.supabase.co",
     "font-src 'self' https://fonts.gstatic.com data:",
     "connect-src 'self' https://*.supabase.co https://api.stripe.com",
     "frame-src https://js.stripe.com https://hooks.stripe.com",

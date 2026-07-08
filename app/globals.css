@@ -238,6 +238,19 @@ a {
 }
 
 /* =========================================================================
+   Portal-managed site video (looping, muted) — same framing as the images
+   ========================================================================= */
+.site-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #EFEBE6;
+}
+
+/* =========================================================================
    SmartImage fallback
    ========================================================================= */
 .smart-image-fallback {
