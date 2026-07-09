@@ -6,7 +6,7 @@ import { createSSRClient, getSessionUser } from '@/lib/supabase/ssr';
 // or forged session simply returns nothing / is rejected by Postgres.
 
 const ADMIN_SELECT =
-  'id,slug,name,subtitle,description,color,factory_ref,price_cents,currency,active,position,' +
+  'id,slug,name,subtitle,description,color,factory_ref,price_cents,currency,active,position,weight_oz,' +
   'product_images(id,url,type,position,alt),product_sizes(id,size,stock)';
 
 /** Throws if there is no valid session. Use at the top of every write action. */
@@ -36,6 +36,8 @@ export interface AdminProduct {
   currency: string;
   active: boolean;
   position: number;
+  /** estimated shipping weight of one piece, in ounces (null until set) */
+  weight_oz: number | null;
   images: AdminImage[];
   sizes: { id: string; size: string; stock: number }[];
 }
@@ -77,6 +79,8 @@ export interface AdminOrderItem {
   unit_price_cents: number;
   name: string;
   slug: string;
+  /** per-piece estimated weight in ounces (null if the piece has no weight set) */
+  weight_oz: number | null;
 }
 
 export interface AdminOrder {
@@ -99,7 +103,7 @@ export interface AdminOrder {
 const ORDER_SELECT =
   'id,stripe_payment_intent,email,customer_name,status,fulfillment_status,amount_cents,currency,' +
   'tracking_number,courier,shipping_json,created_at,shipped_at,' +
-  'order_items(id,size,qty,unit_price_cents,products(name,slug))';
+  'order_items(id,size,qty,unit_price_cents,products(name,slug,weight_oz))';
 
 function normalizeOrder(row: any): AdminOrder {
   return {
@@ -111,6 +115,7 @@ function normalizeOrder(row: any): AdminOrder {
       unit_price_cents: i.unit_price_cents,
       name: i.products?.name ?? 'Pieza',
       slug: i.products?.slug ?? '',
+      weight_oz: i.products?.weight_oz ?? null,
     })),
   };
 }

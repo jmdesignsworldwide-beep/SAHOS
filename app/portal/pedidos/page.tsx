@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { adminListOrders, type FulfillmentStatus } from '@/lib/admin';
 import { formatPrice } from '@/lib/format';
 import { FULFILLMENT_LABEL, PAYMENT_LABEL } from '@/lib/orderStatus';
+import { pirateShipAddress, hasShippingAddress } from '@/lib/shipping-address';
 import { PortalHeader } from '@/components/portal/PortalHeader';
+import { CopyAddressButton } from '@/components/portal/CopyAddressButton';
 
 const TABS: { key: string; label: string }[] = [
   { key: '', label: 'Todos' },
@@ -68,7 +70,7 @@ export default async function PedidosPage({
         ) : (
           <ul className="olist">
             {orders.map((o) => (
-              <li key={o.id}>
+              <li key={o.id} className="orow-wrap">
                 <Link href={`/portal/pedidos/${o.id}`} className="orow">
                   <div className="orow__main">
                     <span className="orow__id">#{shortId(o)}</span>
@@ -88,6 +90,13 @@ export default async function PedidosPage({
                     </span>
                   </div>
                 </Link>
+                {hasShippingAddress(o) && (
+                  <CopyAddressButton
+                    text={pirateShipAddress(o)}
+                    label="Copiar dirección"
+                    className="pbtn orow__copy"
+                  />
+                )}
               </li>
             ))}
           </ul>
