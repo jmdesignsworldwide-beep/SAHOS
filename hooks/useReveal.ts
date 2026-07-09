@@ -109,6 +109,36 @@ export function useLinesReveal<T extends HTMLElement = HTMLDivElement>(opts: Rev
   return ref;
 }
 
+/**
+ * Cinematic parallax for a product shot: the media inside the frame is zoomed
+ * a touch and drifts slower than the scroll. We translate the inner image only
+ * (not the measured `.shared-media` box), so the collection→product morph keeps
+ * flying from the correct on-screen rect. `amount` is the drift in % of height.
+ */
+export function useShotParallax<T extends HTMLElement = HTMLDivElement>(amount = 6) {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || prefersReducedMotion()) return;
+    const media = el.querySelector<HTMLElement>('img, .smart-image-fallback');
+    if (!media) return;
+    const ctx = gsap.context(() => {
+      gsap.set(media, { scale: 1.14, transformOrigin: 'center center', willChange: 'transform' });
+      gsap.fromTo(
+        media,
+        { yPercent: -amount },
+        {
+          yPercent: amount,
+          ease: 'none',
+          scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true },
+        }
+      );
+    });
+    return () => ctx.revert();
+  }, [amount]);
+  return ref;
+}
+
 /** Parallax on a full-bleed element, scrubbed to scroll. `amount` in px. */
 export function useParallax<T extends HTMLElement = HTMLDivElement>(amount = 80) {
   const ref = useRef<T>(null);
