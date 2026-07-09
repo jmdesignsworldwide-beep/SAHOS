@@ -49,7 +49,7 @@ function ProductBanner({ product }: { product: Product }) {
             kind="card"
             url={primary?.url ?? ''}
             alt={`${product.name} — look`}
-            sizes="(max-width: 900px) 100vw, 50vw"
+            sizes="100vw"
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />
@@ -59,7 +59,7 @@ function ProductBanner({ product }: { product: Product }) {
             src={secondary?.url ?? ''}
             alt={`${product.name} — detail`}
             fill
-            sizes="(max-width: 900px) 100vw, 50vw"
+            sizes="100vw"
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />
