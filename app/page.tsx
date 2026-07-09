@@ -1,7 +1,7 @@
 import { Intro } from '@/components/motion/Intro';
 import { Hero } from '@/components/home/Hero';
-import { Manifesto } from '@/components/home/Manifesto';
-import { CollectionGrid } from '@/components/home/CollectionGrid';
+import { BrandBanner } from '@/components/home/BrandBanner';
+import { CollectionShowcase } from '@/components/home/CollectionShowcase';
 import { Campaign } from '@/components/home/Campaign';
 import { House } from '@/components/home/House';
 import { Footer } from '@/components/layout/Footer';
@@ -27,8 +27,8 @@ export default async function HomePage() {
       <Intro />
       <main>
         <Hero src={hero.src} alt={hero.alt} />
-        <Manifesto />
-        <CollectionGrid products={products} />
+        <BrandBanner />
+        <CollectionShowcase products={products} />
         <Campaign
           image={campaign1.src}
           alt={campaign1.alt}
