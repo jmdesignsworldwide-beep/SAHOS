@@ -1,24 +1,26 @@
 'use client';
 
+import { type ReactNode } from 'react';
 import Link from 'next/link';
 import { PRODUCTS, modelImages, garmentImages } from '@/lib/products';
 import { SharedImage } from '@/components/product/SharedImage';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
+import { useShotParallax } from '@/hooks/useReveal';
 import { formatPrice } from '@/lib/format';
 import type { Product } from '@/lib/types';
 
 // The Marilyn Collection, as stacked editorial banners (one per piece). Each
-// banner shows two product shots (model + garment/detail) side by side across
-// the full width, with the name, price, subtitle and a SHOP link centered
-// below. The primary shot uses SharedImage so the collection→product photo
-// morph still fires. Banners stack vertically, ~two products per screen.
+// banner shows two product shots stacked full-bleed, with an editorial index
+// number, name, subtitle, price and a SHOP link centered below. The primary
+// shot uses SharedImage so the collection→product photo morph still fires; both
+// shots drift on a slow parallax. Banners stack vertically down the page.
 export function CollectionShowcase({ products = PRODUCTS }: { products?: Product[] }) {
   return (
     <section className="showcase" id="collection">
       <div className="showcase__head">
         <FadeUp as="p" className="label showcase__kicker">
-          Summer &rsquo;26
+          The Collection
         </FadeUp>
         <FadeUp as="h2" className="showcase__title" delay={0.05}>
           The Marilyn Collection — Summer &rsquo;26
@@ -26,24 +28,37 @@ export function CollectionShowcase({ products = PRODUCTS }: { products?: Product
       </div>
 
       <div className="showcase__banners">
-        {products.map((product) => (
-          <ProductBanner key={product.slug} product={product} />
+        {products.map((product, i) => (
+          <ProductBanner key={product.slug} product={product} index={i + 1} />
         ))}
       </div>
     </section>
   );
 }
 
-function ProductBanner({ product }: { product: Product }) {
+// One frame: clip-reveal wrapper + a slow parallax layer holding the image.
+function Shot({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+  const parallaxRef = useShotParallax<HTMLDivElement>(6);
+  return (
+    <ClipReveal className="show-frame" delay={delay}>
+      <div ref={parallaxRef} className="show-frame__inner">
+        {children}
+      </div>
+    </ClipReveal>
+  );
+}
+
+function ProductBanner({ product, index }: { product: Product; index: number }) {
   const models = modelImages(product);
   const garments = garmentImages(product);
   const primary = models[0];
   const secondary = garments[0] ?? models[1] ?? models[0];
+  const no = String(index).padStart(2, '0');
 
   return (
     <article className="show-banner">
       <div className="show-media">
-        <ClipReveal className="show-frame">
+        <Shot>
           <SharedImage
             slug={product.slug}
             kind="card"
@@ -53,8 +68,8 @@ function ProductBanner({ product }: { product: Product }) {
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />
-        </ClipReveal>
-        <ClipReveal className="show-frame" delay={0.08}>
+        </Shot>
+        <Shot delay={0.08}>
           <SmartImage
             src={secondary?.url ?? ''}
             alt={`${product.name} — detail`}
@@ -63,12 +78,12 @@ function ProductBanner({ product }: { product: Product }) {
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />
-        </ClipReveal>
+        </Shot>
       </div>
 
       <div className="show-info">
-        <FadeUp as="p" className="label show-info__kicker">
-          The Marilyn Collection
+        <FadeUp as="p" className="label show-info__index">
+          N&deg; {no}
         </FadeUp>
         <FadeUp as="h3" className="show-info__name" delay={0.04}>
           {product.name}
