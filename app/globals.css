@@ -1686,17 +1686,20 @@ select {
   flex-direction: column;
   gap: clamp(4rem, 9vw, 8rem);
 }
-/* Each banner: the two shots side by side full-width, info centered below. */
+/* Each banner: the two shots side by side EDGE TO EDGE, info centered below. */
 .show-banner {
   display: flex;
   flex-direction: column;
-  gap: clamp(1.25rem, 3vw, 2rem);
+  gap: clamp(1.5rem, 3.5vw, 2.5rem);
 }
+/* Full-bleed: break out of the showcase gutter to the real viewport edges. */
 .show-media {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(8px, 1vw, 16px); /* thin cream seam between the two images */
-  width: 100%;
+  gap: clamp(4px, 0.5vw, 8px); /* minimal cream seam between the two images */
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
 }
 .show-frame {
   position: relative;
@@ -1741,11 +1744,11 @@ select {
 .show-info__cta {
   margin-top: 0.9rem;
 }
-/* Mobile: the two images stack vertically, full width, info below. */
+/* Mobile: the two images stack vertically, edge to edge, info below. */
 @media (max-width: 900px) {
   .show-media {
     grid-template-columns: 1fr;
-    gap: clamp(8px, 2.5vw, 14px);
+    gap: clamp(4px, 1.5vw, 8px);
   }
   .show-frame {
     height: auto;
