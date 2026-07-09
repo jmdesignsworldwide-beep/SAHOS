@@ -61,7 +61,7 @@ export default async function CheckoutSuccessPage({
           hanger, inside SAHOS packaging made to be opened slowly.
         </p>
         <div>
-          <Link href="/collection" className="btn-outline">
+          <Link href="/#collection" className="btn-outline">
             Continue
           </Link>
         </div>

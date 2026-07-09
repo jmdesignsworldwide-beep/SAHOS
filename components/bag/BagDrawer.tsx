@@ -64,7 +64,7 @@ export function BagDrawer() {
             {items.length === 0 ? (
               <div className="bag-empty">
                 <p>Your bag is empty.</p>
-                <a href="/collection" className="link-underline" onClick={close}>
+                <a href="/#collection" className="link-underline" onClick={close}>
                   Discover the collection
                 </a>
               </div>

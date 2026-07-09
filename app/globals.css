@@ -1481,3 +1481,254 @@ a {
     justify-content: center;
   }
 }
+
+/* =========================================================================
+   LOOKBOOK ART DIRECTION — cream / burgundy / gold, serif system.
+   Appended last so it re-themes the public store consistently (the admin
+   portal is scoped under .portal and keeps its own functional UI).
+   ========================================================================= */
+:root {
+  --cream: #f4ede1;
+  --cream-2: #ebe0cf;
+  --ink: #2b211b;
+  --wine: #6e2230;
+  --wine-deep: #57121f;
+  --gold: #a9814b;
+  --gold-soft: #c7a876;
+  --muted: #8c7c6a;
+  --line: #e0d4c0;
+}
+
+/* base: warm cream field, fine luxury serif */
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 400;
+}
+::selection {
+  background: var(--wine);
+  color: var(--cream);
+}
+
+/* keep micro-UI crisp in sans (nav, labels, buttons, form controls) */
+.nav__link,
+.nav__bag,
+.nav__brand,
+.label,
+.btn-fill,
+.btn-outline,
+input,
+textarea,
+button,
+select {
+  font-family: var(--font-jost), system-ui, sans-serif;
+}
+
+/* kickers in warm gold, uppercase tracking */
+.label {
+  color: var(--gold);
+}
+
+/* accent buttons → burgundy (never plain black boxes) */
+.btn-fill {
+  background: var(--wine);
+}
+.btn-fill::before {
+  background: var(--wine-deep);
+}
+.btn-outline {
+  border-color: var(--wine);
+  color: var(--wine);
+}
+.btn-outline:hover {
+  background: var(--wine);
+  color: var(--cream);
+}
+
+/* nav: solid state on cream */
+.nav--solid {
+  background: rgba(244, 237, 225, 0.86);
+  border-bottom-color: var(--line);
+  color: var(--ink);
+}
+
+/* media wells → warm cream so empty/loading frames feel on-brand */
+.hero__media,
+.campaign__media,
+.house__media,
+.pcard__media,
+.gallery__frame,
+.story-figure,
+.show-frame,
+.viewer-section {
+  background: var(--cream-2);
+}
+
+/* section display titles → burgundy serif */
+.page-head__title,
+.house__title,
+.footer__headline,
+.story-intro__title,
+.story-copy__title,
+.collection__title,
+.buy__name {
+  color: var(--wine);
+}
+
+/* muted warm body text */
+.pcard__sub,
+.pcard__price,
+.house__body,
+.story-intro__body,
+.story-copy__body,
+.contact__intro,
+.buy__sub,
+.buy__ref,
+.footer__tag,
+.footer__links,
+.footer__legal,
+.collection__title ~ * .label {
+  color: var(--muted);
+}
+
+/* hairlines → gold-tinted warm line */
+.collection__head,
+.footer__grid,
+.footer,
+.acc,
+.acc__item,
+.viewer-section {
+  border-color: var(--line);
+}
+.footer {
+  background: var(--cream);
+  border-top: 1px solid var(--line);
+}
+.footer__form {
+  border-bottom-color: var(--wine);
+}
+.footer__submit,
+.footer__input {
+  color: var(--ink);
+}
+
+/* =========================================================================
+   Brand banner (replaces the loose manifesto text) — lookbook cover
+   ========================================================================= */
+/* Full-bleed burgundy band: a distinct horizontal strip in the brand wine,
+   edge to edge, with the collection's guiding phrase in cream inside it. */
+.brandbanner {
+  padding: clamp(3rem, 7vw, 5rem) var(--edge);
+  text-align: center;
+  background: var(--wine-deep);
+}
+.brandbanner__inner {
+  max-width: 900px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.brandbanner__rule {
+  display: block;
+  width: 60px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.85;
+}
+.brandbanner__title {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: 0.005em;
+  color: var(--cream);
+  max-width: 22ch;
+}
+
+/* =========================================================================
+   Collection showcase — stacked product banners (2 shots each)
+   ========================================================================= */
+.showcase {
+  padding: clamp(2rem, 5vw, 5rem) var(--edge) clamp(5rem, 12vw, 10rem);
+}
+.showcase__head {
+  text-align: center;
+  margin-bottom: clamp(3rem, 7vw, 6rem);
+}
+.showcase__kicker {
+  margin-bottom: 0.9rem;
+}
+.showcase__title {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  font-size: clamp(1.9rem, 5vw, 3.4rem);
+  line-height: 1.05;
+  color: var(--wine);
+}
+.showcase__banners {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4rem, 9vw, 8rem);
+}
+/* Each banner: the two shots side by side EDGE TO EDGE, info centered below. */
+.show-banner {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3.5vw, 2.5rem);
+}
+/* Full-bleed: two shots STACKED vertically, edge to edge, flush (0 gap). */
+.show-media {
+  display: block;
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  font-size: 0; /* kill any inline-gap between the stacked frames */
+}
+/* Uniform landscape format across every piece so the collection reads even. */
+.show-frame {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+.show-frame img,
+.show-frame .smart-image-fallback {
+  object-fit: cover;
+}
+.show-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+.show-info__kicker {
+  margin-bottom: 0.15rem;
+}
+.show-info__name {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  font-size: clamp(2rem, 4.5vw, 3.4rem);
+  line-height: 1.04;
+  color: var(--wine);
+}
+.show-info__sub {
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 1.1rem;
+  max-width: 34ch;
+  margin-inline: auto;
+}
+.show-info__price {
+  color: var(--ink);
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+}
+.show-info__cta {
+  margin-top: 0.9rem;
+}
+/* Mobile: same stacked full-width block; the uniform 16:9 ratio carries over. */

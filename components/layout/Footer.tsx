@@ -60,7 +60,7 @@ export function Footer() {
           <p className="footer__tag">The Marilyn Collection</p>
         </div>
         <nav className="footer__links">
-          <Link href="/collection">Collection</Link>
+          <Link href="/#collection">Collection</Link>
           <Link href="/our-story">Our Story</Link>
           <Link href="/contact">Contact</Link>
         </nav>

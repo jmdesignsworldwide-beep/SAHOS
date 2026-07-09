@@ -7,6 +7,7 @@ import { BagProvider } from '@/components/providers/BagProvider';
 import { SharedTransitionProvider } from '@/components/providers/SharedTransition';
 import { PageTransition } from '@/components/providers/PageTransition';
 import { MagneticCursor } from '@/components/motion/MagneticCursor';
+import { AnchorScroll } from '@/components/motion/AnchorScroll';
 import { Nav } from '@/components/layout/Nav';
 import { BagDrawer } from '@/components/bag/BagDrawer';
 
@@ -27,6 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <BagProvider>
         <SharedTransitionProvider>
           <MagneticCursor />
+          <AnchorScroll />
           <Nav />
           <BagDrawer />
           <PageTransition>{children}</PageTransition>
