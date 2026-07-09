@@ -1,23 +1,23 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { SmartImage } from '@/components/ui/SmartImage';
+import { SiteMedia } from '@/components/ui/SiteMedia';
 import { gsap, ScrollTrigger, prefersReducedMotion } from '@/lib/gsap';
+import type { ResolvedMedia } from '@/lib/site-images';
 
 // Full-bleed campaign section (spec §4.1): pin the section and scrub a slow
-// scale + reveal of the line over it. One editorial frame, one line of text.
+// scale + reveal of the line over it. One editorial frame (image or looping
+// video), one line of text.
 export function Campaign({
-  image,
+  media,
   line,
   tone = '#DED9D3',
   label,
-  alt,
 }: {
-  image: string;
+  media: ResolvedMedia;
   line: string;
   tone?: string;
   label: string;
-  alt?: string;
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,15 @@ export function Campaign({
   return (
     <section ref={sectionRef} className="campaign">
       <div ref={mediaRef} className="campaign__media">
-        <SmartImage src={image} alt={alt ?? label} fill sizes="100vw" placeholderLabel={label} tone={tone} />
+        <SiteMedia
+          type={media.type}
+          src={media.src}
+          poster={media.poster}
+          alt={media.alt || label}
+          sizes="100vw"
+          placeholderLabel={label}
+          tone={tone}
+        />
       </div>
       <div className="campaign__line">
         <h2>{line}</h2>

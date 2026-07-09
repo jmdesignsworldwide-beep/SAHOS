@@ -19,6 +19,15 @@ const ALLOWED_MIME: Record<string, string> = {
   'image/png': 'png',
   'image/webp': 'webp',
 };
+// Site slots also accept video. content-type → extension. Videos ride the same
+// signed-upload path (so large clips bypass the function body limit).
+const SITE_MEDIA_MIME: Record<string, { ext: string; kind: 'image' | 'video' }> = {
+  'image/jpeg': { ext: 'jpg', kind: 'image' },
+  'image/png': { ext: 'png', kind: 'image' },
+  'image/webp': { ext: 'webp', kind: 'image' },
+  'video/mp4': { ext: 'mp4', kind: 'video' },
+  'video/webm': { ext: 'webm', kind: 'video' },
+};
 
 export interface ActionState {
   error?: string;
@@ -397,11 +406,13 @@ export async function createSiteImageUpload(formData: FormData): Promise<UploadT
     if (!isSiteImageSlot(slotKey)) return { error: 'Slot inválido.' };
 
     const contentType = str(formData.get('content_type'), 100);
-    const ext = ALLOWED_MIME[contentType];
-    if (!ext) return { error: 'Formato no soportado. Usa JPG, PNG o WebP (el HEIC del iPhone no sirve).' };
+    const media = SITE_MEDIA_MIME[contentType];
+    if (!media) {
+      return { error: 'Formato no soportado. Imagen: JPG, PNG, WebP. Video: MP4 o WebM (HEIC del iPhone no sirve).' };
+    }
 
     // Server-controlled, sanitized, unguessable path: site/<slot>/<uuid>.<ext>.
-    const key = `${SITE_PREFIX}/${slotKey}/${crypto.randomUUID()}.${ext}`;
+    const key = `${SITE_PREFIX}/${slotKey}/${crypto.randomUUID()}.${media.ext}`;
     const supabase = createSSRClient(); // authenticated admin — RLS still applies
     const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(key);
     if (error || !data) {
@@ -428,41 +439,63 @@ export async function saveSiteImageMeta(formData: FormData): Promise<ActionState
     if (!isSiteImageSlot(slotKey)) return { error: 'Slot inválido.' };
     const altText = str(formData.get('alt_text'), 300);
 
-    // Optional new image URL — must be one of OUR public Storage URLs under the
-    // site/ prefix, so a client can never point a slot at an arbitrary URL.
+    const mediaTypeRaw = str(formData.get('media_type'), 8);
+    const mediaType: 'image' | 'video' = mediaTypeRaw === 'video' ? 'video' : 'image';
+
+    // Any new URL must be one of OUR public Storage URLs under the site/ prefix,
+    // so a client can never point a slot at an arbitrary URL.
+    const validPrefix = `${env.supabaseUrl}/storage/v1/object/public/${BUCKET}/${SITE_PREFIX}/`;
+    const isOurUrl = (u: string) => u.startsWith(validPrefix);
+
     const rawUrl = str(formData.get('image_url'), 600);
     let newUrl: string | null = null;
     if (rawUrl) {
-      const validPrefix = `${env.supabaseUrl}/storage/v1/object/public/${BUCKET}/${SITE_PREFIX}/`;
-      if (!rawUrl.startsWith(validPrefix)) return { error: 'URL de imagen inválida.' };
+      if (!isOurUrl(rawUrl)) return { error: 'URL de imagen inválida.' };
       newUrl = rawUrl;
+    }
+
+    const rawPoster = str(formData.get('poster_url'), 600);
+    let newPoster: string | null = null;
+    if (rawPoster) {
+      if (!isOurUrl(rawPoster)) return { error: 'URL de póster inválida.' };
+      newPoster = rawPoster;
     }
 
     const { data: existing } = await supabase
       .from('site_images')
-      .select('image_url')
+      .select('image_url,poster_url')
       .eq('slot_key', slotKey)
       .maybeSingle();
 
-    // No new file → keep the current image (alt-only save).
+    // No new file → keep the current media (alt-only save).
     const finalUrl = newUrl ?? existing?.image_url ?? null;
+    // Poster only applies to video; for an image save clear it.
+    const finalPoster = mediaType === 'video' ? newPoster ?? (existing?.poster_url ?? null) : null;
 
     const { error: upsertErr } = await supabase.from('site_images').upsert(
       {
         slot_key: slotKey,
         image_url: finalUrl,
         alt_text: altText || null,
+        media_type: mediaType,
+        poster_url: finalPoster,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'slot_key' }
     );
     if (upsertErr) return { error: `No se pudo guardar: ${upsertErr.message}` };
 
-    // Best-effort cleanup of the replaced file (only our own site/ objects).
+    // Best-effort cleanup of the replaced file(s) (only our own site/ objects).
     if (newUrl && existing?.image_url && existing.image_url !== newUrl) {
       const oldPath = storagePathFromUrl(existing.image_url);
       if (oldPath && oldPath.startsWith(`${SITE_PREFIX}/`)) {
         await supabase.storage.from(BUCKET).remove([oldPath]);
+      }
+    }
+    if (newPoster && existing?.poster_url && existing.poster_url !== newPoster) {
+      const oldPoster = storagePathFromUrl(existing.poster_url);
+      if (oldPoster && oldPoster.startsWith(`${SITE_PREFIX}/`)) {
+        await supabase.storage.from(BUCKET).remove([oldPoster]);
       }
     }
 

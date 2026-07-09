@@ -80,13 +80,19 @@ export function isSiteImageSlot(key: string): boolean {
   return SITE_IMAGE_KEYS.includes(key);
 }
 
-/** slot_key → { url, alt } as read from the DB (null when a slot has no row). */
-export type SiteImageMap = Record<string, { url: string | null; alt: string | null }>;
+/** A slot can hold a still image or a looping video. */
+export type SiteMediaType = 'image' | 'video';
+
+/** slot_key → media as read from the DB (null when a slot has no row). */
+export type SiteImageMap = Record<
+  string,
+  { url: string | null; alt: string | null; mediaType: SiteMediaType; posterUrl: string | null }
+>;
 
 /**
  * Resolve the image to render for a slot: the uploaded one from the DB, or the
  * current /public fallback if the slot is empty (so nothing ever breaks). Alt
- * falls back to the slot's default.
+ * falls back to the slot's default. (Kept for image-only call sites.)
  */
 export function resolveSiteImage(
   map: SiteImageMap | null | undefined,
@@ -100,4 +106,37 @@ export function resolveSiteImage(
     src: url ?? slot?.fallback ?? '',
     alt: alt ?? slot?.defaultAlt ?? '',
   };
+}
+
+export interface ResolvedMedia {
+  type: SiteMediaType;
+  /** the media URL to render (image or video), or the /public fallback image */
+  src: string;
+  alt: string;
+  /** poster/fallback image — shown while a video loads, under reduced-motion, or
+   *  if the video fails; always an image URL (never empty when a fallback exists). */
+  poster: string;
+}
+
+/**
+ * Resolve a slot to either an image or a video, with a guaranteed poster/fallback
+ * image so the site never shows a black hole. Video slots fall back to their
+ * uploaded poster, then to the slot's /public still.
+ */
+export function resolveSiteMedia(
+  map: SiteImageMap | null | undefined,
+  key: string
+): ResolvedMedia {
+  const slot = SITE_IMAGE_SLOTS.find((s) => s.key === key);
+  const fallback = slot?.fallback ?? '';
+  const row = map?.[key];
+  const alt = row?.alt && row.alt.length > 0 ? row.alt : slot?.defaultAlt ?? '';
+
+  if (row?.mediaType === 'video' && row.url && row.url.length > 0) {
+    const poster = row.posterUrl && row.posterUrl.length > 0 ? row.posterUrl : fallback;
+    return { type: 'video', src: row.url, alt, poster };
+  }
+
+  const src = row?.url && row.url.length > 0 ? row.url : fallback;
+  return { type: 'image', src, alt, poster: src };
 }

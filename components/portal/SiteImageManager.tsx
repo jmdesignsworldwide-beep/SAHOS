@@ -7,11 +7,15 @@ import { createSiteImageUpload, saveSiteImageMeta } from '@/app/portal/actions';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 
 const BUCKET = 'product-images';
-const MAX_BYTES = 25 * 1024 * 1024; // 25MB — clean hero photos are large
-const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+const IMAGE_MAX = 25 * 1024 * 1024; // 25MB
+const VIDEO_MAX = 50 * 1024 * 1024; // 50MB
+const VIDEO_MAX_SECONDS = 30; // keep loops short for performance
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const VIDEO_TYPES = ['video/mp4', 'video/webm'];
 
-// Returns a human error string if the file can't be used, else null.
-function validateFile(file: File): string | null {
+type Kind = 'image' | 'video';
+
+function classify(file: File): { kind: Kind } | { error: string } {
   const name = file.name.toLowerCase();
   const isHeic =
     file.type === 'image/heic' ||
@@ -19,26 +23,102 @@ function validateFile(file: File): string | null {
     name.endsWith('.heic') ||
     name.endsWith('.heif');
   if (isHeic) {
-    return 'Las fotos HEIC del iPhone no se ven en la web. En tu iPhone: Ajustes → Cámara → Formatos → «Más compatible», o abre la foto y expórtala como JPG, y vuelve a subirla.';
+    return {
+      error:
+        'Las fotos HEIC del iPhone no se ven en la web. En tu iPhone: Ajustes → Cámara → Formatos → «Más compatible», o exporta la foto como JPG, y vuelve a subirla.',
+    };
   }
-  if (!ALLOWED.includes(file.type)) {
-    return 'Formato no soportado. Usa JPG, PNG o WebP.';
+  if (IMAGE_TYPES.includes(file.type)) {
+    if (file.size > IMAGE_MAX)
+      return { error: `La imagen es muy grande (${(file.size / 1048576).toFixed(1)}MB). Máx 25MB.` };
+    return { kind: 'image' };
   }
-  if (file.size > MAX_BYTES) {
-    return `La imagen es muy grande (${(file.size / 1024 / 1024).toFixed(1)}MB). El máximo es 25MB.`;
+  if (VIDEO_TYPES.includes(file.type)) {
+    if (file.size > VIDEO_MAX)
+      return { error: `El video es muy grande (${(file.size / 1048576).toFixed(1)}MB). Máx 50MB.` };
+    return { kind: 'video' };
   }
-  return null;
+  return { error: 'Formato no soportado. Imagen: JPG, PNG, WebP · Video: MP4 o WebM.' };
+}
+
+// Read a video's duration from a local file.
+function videoDuration(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.muted = true;
+    const url = URL.createObjectURL(file);
+    v.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(Number.isFinite(v.duration) ? v.duration : 0);
+    };
+    v.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(0);
+    };
+    v.src = url;
+  });
+}
+
+// Capture the first frame of a video as a JPEG poster (best-effort — returns
+// null if the browser blocks it). Gives the site an instant still while the
+// clip loads, and a fallback under reduced-motion.
+function makePoster(file: File): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    v.preload = 'auto';
+    v.muted = true;
+    v.playsInline = true;
+    const url = URL.createObjectURL(file);
+    let done = false;
+    const finish = (blob: Blob | null) => {
+      if (done) return;
+      done = true;
+      URL.revokeObjectURL(url);
+      resolve(blob);
+    };
+    const grab = () => {
+      try {
+        const w = v.videoWidth;
+        const h = v.videoHeight;
+        if (!w || !h) return finish(null);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return finish(null);
+        ctx.drawImage(v, 0, 0, w, h);
+        canvas.toBlob((b) => finish(b), 'image/jpeg', 0.82);
+      } catch {
+        finish(null);
+      }
+    };
+    v.onloadeddata = () => {
+      // seek a hair in so we don't capture a black first frame
+      try {
+        v.currentTime = Math.min(0.1, (v.duration || 1) / 2);
+      } catch {
+        grab();
+      }
+    };
+    v.onseeked = grab;
+    v.onerror = () => finish(null);
+    setTimeout(() => finish(null), 5000); // never hang the save
+    v.src = url;
+  });
 }
 
 export interface SiteImageItem {
   key: string;
   group: string;
   label: string;
-  /** current image to show (uploaded one, or the /public fallback) */
+  /** current media to show (uploaded one, or the /public fallback image) */
   currentSrc: string;
-  /** current alt text (empty string if none set) */
+  /** 'image' | 'video' — how the slot currently renders */
+  mediaType: Kind;
+  /** poster/fallback still for a current video */
+  posterSrc: string;
   alt: string;
-  /** true when a custom image has been uploaded (vs. the default file) */
   hasCustom: boolean;
 }
 
@@ -50,6 +130,7 @@ function SlotCard({ item }: { item: SiteImageItem }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
+  const [fileKind, setFileKind] = useState<Kind>('image');
   const [preview, setPreview] = useState<string | null>(null);
   const [alt, setAlt] = useState(item.alt);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -64,7 +145,7 @@ function SlotCard({ item }: { item: SiteImageItem }) {
   const altChanged = alt.trim() !== item.alt.trim();
   const canSave = (Boolean(file) || altChanged) && !pending;
 
-  const pickFile = (f: File | null) => {
+  const pickFile = async (f: File | null) => {
     setMsg(null);
     if (preview) URL.revokeObjectURL(preview);
     if (!f) {
@@ -72,24 +153,55 @@ function SlotCard({ item }: { item: SiteImageItem }) {
       setPreview(null);
       return;
     }
-    const err = validateFile(f);
-    if (err) {
-      // Reject clearly and don't stage the file.
+    const res = classify(f);
+    if ('error' in res) {
       setFile(null);
       setPreview(null);
       if (inputRef.current) inputRef.current.value = '';
-      setMsg({ text: err });
+      setMsg({ text: res.error });
       return;
     }
+    if (res.kind === 'video') {
+      const dur = await videoDuration(f);
+      if (dur > VIDEO_MAX_SECONDS) {
+        setFile(null);
+        setPreview(null);
+        if (inputRef.current) inputRef.current.value = '';
+        setMsg({
+          text: `El video dura ${dur.toFixed(0)}s. Usa un clip corto (máx ${VIDEO_MAX_SECONDS}s) para el loop.`,
+        });
+        return;
+      }
+    }
     setFile(f);
+    setFileKind(res.kind);
     setPreview(URL.createObjectURL(f));
   };
 
   const reset = () => {
-    pickFile(null);
+    void pickFile(null);
     setAlt(item.alt);
     setMsg(null);
     if (inputRef.current) inputRef.current.value = '';
+  };
+
+  // Upload one file straight to Storage via a server-issued signed URL. Returns
+  // the public URL, or throws with a visible message.
+  const uploadOne = async (f: File): Promise<string> => {
+    const ticketFd = new FormData();
+    ticketFd.set('slot_key', item.key);
+    ticketFd.set('content_type', f.type);
+    const ticket = await createSiteImageUpload(ticketFd);
+    if (ticket?.error || !ticket?.path || !ticket?.token || !ticket?.publicUrl) {
+      throw new Error(ticket?.error || 'No se pudo iniciar la subida.');
+    }
+    const supa = getBrowserSupabase();
+    if (!supa) throw new Error('Almacenamiento no configurado.');
+    const { error } = await supa.storage
+      .from(BUCKET)
+      .uploadToSignedUrl(ticket.path, ticket.token, f, { contentType: f.type });
+    if (error) throw new Error(`No se pudo subir: ${error.message}`);
+    return ticket.publicUrl;
   };
 
   const save = () => {
@@ -97,45 +209,31 @@ function SlotCard({ item }: { item: SiteImageItem }) {
     setMsg(null);
     startTransition(async () => {
       try {
-        let uploadedUrl: string | undefined;
+        let mediaUrl: string | undefined;
+        let posterUrl: string | undefined;
+        const kind: Kind = file ? fileKind : item.mediaType;
 
         if (file) {
-          // 1) ask the server for a signed upload URL (server picks the path).
           setPhase('uploading');
-          const ticketFd = new FormData();
-          ticketFd.set('slot_key', item.key);
-          ticketFd.set('content_type', file.type);
-          const ticket = await createSiteImageUpload(ticketFd);
-          if (ticket?.error || !ticket?.path || !ticket?.token) {
-            setPhase('idle');
-            setMsg({ text: ticket?.error || 'No se pudo iniciar la subida.' });
-            return;
+          // For video, capture a poster first (best-effort) so the site has a
+          // still frame while the clip loads / under reduced-motion.
+          if (fileKind === 'video') {
+            const posterBlob = await makePoster(file);
+            if (posterBlob) {
+              const posterFile = new File([posterBlob], 'poster.jpg', { type: 'image/jpeg' });
+              posterUrl = await uploadOne(posterFile);
+            }
           }
-
-          // 2) push the bytes straight to Storage (bypasses function limits).
-          const supa = getBrowserSupabase();
-          if (!supa) {
-            setPhase('idle');
-            setMsg({ text: 'Almacenamiento no configurado.' });
-            return;
-          }
-          const { error: upErr } = await supa.storage
-            .from(BUCKET)
-            .uploadToSignedUrl(ticket.path, ticket.token, file, { contentType: file.type });
-          if (upErr) {
-            setPhase('idle');
-            setMsg({ text: `No se pudo subir la imagen: ${upErr.message}` });
-            return;
-          }
-          uploadedUrl = ticket.publicUrl;
+          mediaUrl = await uploadOne(file);
         }
 
-        // 3) persist the new URL (if any) + alt text.
         setPhase('saving');
         const metaFd = new FormData();
         metaFd.set('slot_key', item.key);
         metaFd.set('alt_text', alt);
-        if (uploadedUrl) metaFd.set('image_url', uploadedUrl);
+        metaFd.set('media_type', kind);
+        if (mediaUrl) metaFd.set('image_url', mediaUrl);
+        if (posterUrl) metaFd.set('poster_url', posterUrl);
         const res = await saveSiteImageMeta(metaFd);
         if (res?.error) {
           setPhase('idle');
@@ -143,7 +241,6 @@ function SlotCard({ item }: { item: SiteImageItem }) {
           return;
         }
 
-        // success — clear the staged selection; refreshed data is the new state
         if (preview) URL.revokeObjectURL(preview);
         setFile(null);
         setPreview(null);
@@ -152,7 +249,6 @@ function SlotCard({ item }: { item: SiteImageItem }) {
         setMsg({ ok: true, text: 'Guardado' });
         router.refresh();
       } catch (e) {
-        // Never fail silently — surface anything unexpected.
         setPhase('idle');
         setMsg({
           text: e instanceof Error ? e.message : 'Error inesperado al subir. Inténtalo de nuevo.',
@@ -161,24 +257,35 @@ function SlotCard({ item }: { item: SiteImageItem }) {
     });
   };
 
-  const shown = preview ?? item.currentSrc;
   const btnLabel = !pending ? 'Guardar' : phase === 'uploading' ? 'Subiendo…' : 'Guardando…';
+
+  // What to show in the thumbnail: a fresh selection, else the current media.
+  const showPreviewVideo = preview && fileKind === 'video';
+  const showCurrentVideo = !preview && item.mediaType === 'video' && item.currentSrc;
+  const shownImg = preview ?? item.currentSrc;
 
   return (
     <div className="simg-card">
       <div className="simg-card__media">
-        {shown ? (
-          <img src={shown} alt={item.alt || item.label} loading="lazy" />
+        {showPreviewVideo ? (
+          <video src={preview!} muted loop autoPlay playsInline />
+        ) : showCurrentVideo ? (
+          <video src={item.currentSrc} poster={item.posterSrc || undefined} muted loop autoPlay playsInline />
+        ) : shownImg ? (
+          <img src={shownImg} alt={item.alt || item.label} loading="lazy" />
         ) : (
           <span className="simg-card__empty">—</span>
         )}
+
         {pending && <span className="simg-card__tag simg-card__tag--busy">{btnLabel}</span>}
         {!pending && preview && (
-          <span className="simg-card__tag simg-card__tag--preview">Vista previa</span>
+          <span className="simg-card__tag simg-card__tag--preview">
+            Vista previa{fileKind === 'video' ? ' · video' : ''}
+          </span>
         )}
         {!pending && !preview && (
           <span className={`simg-card__tag ${item.hasCustom ? 'is-custom' : 'is-default'}`}>
-            {item.hasCustom ? 'Personalizada' : 'Por defecto'}
+            {item.hasCustom ? (item.mediaType === 'video' ? 'Video' : 'Personalizada') : 'Por defecto'}
           </span>
         )}
       </div>
@@ -201,9 +308,9 @@ function SlotCard({ item }: { item: SiteImageItem }) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif"
+          accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp4,.webm"
           hidden
-          onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+          onChange={(e) => void pickFile(e.target.files?.[0] ?? null)}
         />
 
         <div className="simg-card__actions">
@@ -213,7 +320,7 @@ function SlotCard({ item }: { item: SiteImageItem }) {
             onClick={() => inputRef.current?.click()}
             disabled={pending}
           >
-            {file ? 'Cambiar archivo' : 'Elegir imagen'}
+            {file ? 'Cambiar archivo' : 'Imagen o video'}
           </button>
           <button type="button" className="pbtn pbtn--primary" onClick={save} disabled={!canSave}>
             {btnLabel}
@@ -226,7 +333,9 @@ function SlotCard({ item }: { item: SiteImageItem }) {
         </div>
 
         {file && <span className="simg-card__file">{file.name}</span>}
-        <span className="simg-card__hint">JPG, PNG o WebP · máx 25MB · (HEIC del iPhone no)</span>
+        <span className="simg-card__hint">
+          Imagen JPG/PNG/WebP (máx 25MB) · Video MP4/WebM (máx 50MB, clip corto)
+        </span>
         {msg && <p className={`pmsg ${msg.ok ? 'pmsg--ok' : 'pmsg--error'}`}>{msg.text}</p>}
       </div>
     </div>
