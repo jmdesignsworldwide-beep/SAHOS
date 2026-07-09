@@ -123,6 +123,15 @@ export async function saveProductAction(formData: FormData): Promise<SaveResult>
       priceCents = Math.round(n * 100);
     }
 
+    // estimated shipping weight in ounces (decimals allowed); empty allowed
+    const weightRaw = str(formData.get('weight_oz'), 12);
+    let weightOz: number | null = null;
+    if (weightRaw) {
+      const w = Number(weightRaw.replace(/[^0-9.]/g, ''));
+      if (!Number.isFinite(w) || w < 0 || w > 100000) return { error: 'Peso inválido.' };
+      weightOz = Math.round(w * 100) / 100;
+    }
+
     const slug = (str(formData.get('slug'), 60) || slugify(name)) || `pieza-${Date.now()}`;
     const payload = {
       name,
@@ -132,6 +141,7 @@ export async function saveProductAction(formData: FormData): Promise<SaveResult>
       color,
       factory_ref: factoryRef,
       price_cents: priceCents,
+      weight_oz: weightOz,
       active,
     };
 

@@ -3,8 +3,15 @@ import { notFound } from 'next/navigation';
 import { adminGetOrder } from '@/lib/admin';
 import { formatPrice } from '@/lib/format';
 import { FULFILLMENT_LABEL, PAYMENT_LABEL } from '@/lib/orderStatus';
+import {
+  pirateShipAddress,
+  hasShippingAddress,
+  orderTotalWeight,
+  formatWeight,
+} from '@/lib/shipping-address';
 import { PortalHeader } from '@/components/portal/PortalHeader';
 import { OrderStatusControl } from '@/components/portal/OrderStatusControl';
+import { CopyAddressButton } from '@/components/portal/CopyAddressButton';
 
 function shipping(o: any): { name?: string; line1?: string; line2?: string; city?: string; country?: string } {
   const s = o.shipping_json ?? {};
@@ -22,6 +29,9 @@ export default async function PedidoDetallePage({ params }: { params: { id: stri
   const order = await adminGetOrder(params.id);
   if (!order) notFound();
   const addr = shipping(order);
+  const addressBlock = pirateShipAddress(order);
+  const hasAddress = hasShippingAddress(order);
+  const weight = orderTotalWeight(order);
 
   return (
     <>
@@ -37,6 +47,49 @@ export default async function PedidoDetallePage({ params }: { params: { id: stri
         </div>
 
         <div className="odetail">
+          {/* Everything the owner needs to buy the label in PirateShip, in one place */}
+          <section className="ocard ocard--ship">
+            <h2 className="ocard__title">Listo para envío · PirateShip</h2>
+            <div className="ship__grid">
+              <div className="ship__col">
+                <span className="ship__label">Dirección del cliente</span>
+                {hasAddress ? (
+                  <>
+                    <pre className="ship__block">{addressBlock}</pre>
+                    <CopyAddressButton text={addressBlock} />
+                  </>
+                ) : (
+                  <p className="ocard__note">Este pedido no tiene dirección de envío guardada.</p>
+                )}
+              </div>
+              <div className="ship__col">
+                <span className="ship__label">Paquete</span>
+                <ul className="ship__pieces">
+                  {order.items.map((it) => (
+                    <li key={it.id} className="ship__piece">
+                      <span>
+                        {it.name} · T{it.size} · x{it.qty}
+                      </span>
+                      <span className="ship__pw">
+                        {it.weight_oz != null ? `${Math.round(it.weight_oz * it.qty * 100) / 100} oz` : '—'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="ship__total">
+                  <span>Peso total estimado</span>
+                  <strong>{formatWeight(weight.totalOz)}</strong>
+                </div>
+                {weight.missing && (
+                  <p className="ship__warn">
+                    Falta el peso de alguna pieza. Ponlo en Productos → editar pieza → «Peso por
+                    pieza (oz)».
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
           <section className="ocard">
             <h2 className="ocard__title">Estado del envío</h2>
             <OrderStatusControl order={order} />

@@ -1107,3 +1107,102 @@
     gap: 0.25rem;
   }
 }
+
+/* =========================================================================
+   Order fulfillment — "ready to ship" (PirateShip) panel + copy address
+   ========================================================================= */
+.ocard--ship {
+  border: 1px solid #d9c9a3;
+  box-shadow: inset 3px 0 0 #cbb78a;
+}
+.ship__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.ship__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.ship__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9b978f;
+}
+.ship__block {
+  margin: 0;
+  background: #faf9f8;
+  border: 1px solid #e7e5e1;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  font-family: inherit;
+  white-space: pre-line;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #1a1a18;
+}
+.ship__pieces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.ship__piece {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #40403c;
+}
+.ship__pw {
+  color: #55524d;
+  white-space: nowrap;
+}
+.ship__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e7e5e1;
+  font-size: 0.95rem;
+}
+.ship__warn {
+  font-size: 0.8rem;
+  color: #8a6d2f;
+  margin: 0.25rem 0 0;
+}
+@media (max-width: 720px) {
+  .ship__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* copy button in the orders list row (sibling of the row link) */
+.orow-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+.orow-wrap .orow {
+  flex: 1;
+  min-width: 0;
+}
+.orow__copy {
+  align-self: center;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+@media (max-width: 640px) {
+  .orow-wrap {
+    flex-direction: column;
+  }
+  .orow__copy {
+    align-self: stretch;
+  }
+}

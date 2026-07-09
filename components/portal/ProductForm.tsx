@@ -71,6 +71,16 @@ export function ProductForm({ product }: { product?: AdminProduct }) {
         />
       </label>
 
+      <label className="pfield">
+        <span>Peso por pieza (oz)</span>
+        <input
+          name="weight_oz"
+          inputMode="decimal"
+          placeholder="p. ej. 8"
+          defaultValue={product?.weight_oz != null ? product.weight_oz.toString() : ''}
+        />
+      </label>
+
       <label className="pfield pfield--wide">
         <span>Descripción</span>
         <textarea name="description" rows={4} defaultValue={product?.description ?? ''} maxLength={4000} />
