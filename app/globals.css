@@ -405,9 +405,9 @@ a {
 .hero__scrim {
   position: absolute;
   inset: 0;
-  /* darken bottom (for the title) and, subtly, the top (for the logo) */
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0) 42%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0) 26%);
+  pointer-events: none;
+  /* clean image: only a whisper-soft top wash so the nav stays legible */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0) 18%);
 }
 /* The real SAHOS logo overlaid at the top of the hero, in WHITE. The art is
    gold-on-black; grayscale+brightness washes it white and `screen` drops the

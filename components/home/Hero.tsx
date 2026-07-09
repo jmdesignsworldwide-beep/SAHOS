@@ -1,15 +1,14 @@
 'use client';
 
 import { SiteMedia } from '@/components/ui/SiteMedia';
-import { SplitReveal } from '@/components/motion/SplitReveal';
 import { useParallax } from '@/hooks/useReveal';
 import type { ResolvedMedia } from '@/lib/site-images';
 
-// Full-bleed editorial hero (spec §4.1). The founder image — or a looping video —
-// is the hero; the title reveals letter-by-letter; the media drifts on a scrubbed
+// Full-bleed editorial hero (spec §4.1). A clean, full-screen founder image — or
+// a looping video — with NO text overlaid; the media drifts on a scrubbed
 // parallax. Portal-managed (site_images slot "home_hero"), each slot a still or a
-// clip. The SAHOS wordmark lives in the top nav only — no duplicate logo is
-// overlaid on the media.
+// clip. Only the top nav sits over the photo (kept legible by a whisper-soft top
+// gradient). The SAHOS wordmark lives in the nav — never burned onto the media.
 const DEFAULT_MEDIA: ResolvedMedia = {
   type: 'image',
   src: '/home/hero-founder.jpg',
@@ -35,13 +34,6 @@ export function Hero({ media = DEFAULT_MEDIA }: { media?: ResolvedMedia } = {}) 
         />
       </div>
       <div className="hero__scrim" />
-
-      <div className="hero__content">
-        <p className="hero__eyebrow label">The Marilyn Collection</p>
-        <SplitReveal text="Not a wardrobe. A confession." className="hero__title" />
-      </div>
-
-      <div className="hero__scroll">Scroll</div>
     </section>
   );
 }
