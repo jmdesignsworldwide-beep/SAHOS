@@ -9,9 +9,10 @@ import { formatPrice } from '@/lib/format';
 import type { Product } from '@/lib/types';
 
 // The Marilyn Collection, as stacked editorial banners (one per piece). Each
-// banner pairs two product shots (model + garment/detail) with the name, price,
-// subtitle and a SHOP link. The primary shot uses SharedImage so the collection→
-// product photo morph still fires. Banners alternate side for lookbook rhythm.
+// banner shows two product shots (model + garment/detail) side by side across
+// the full width, with the name, price, subtitle and a SHOP link centered
+// below. The primary shot uses SharedImage so the collection→product photo
+// morph still fires. Banners stack vertically, ~two products per screen.
 export function CollectionShowcase({ products = PRODUCTS }: { products?: Product[] }) {
   return (
     <section className="showcase" id="collection">
@@ -25,22 +26,22 @@ export function CollectionShowcase({ products = PRODUCTS }: { products?: Product
       </div>
 
       <div className="showcase__banners">
-        {products.map((product, i) => (
-          <ProductBanner key={product.slug} product={product} reverse={i % 2 === 1} />
+        {products.map((product) => (
+          <ProductBanner key={product.slug} product={product} />
         ))}
       </div>
     </section>
   );
 }
 
-function ProductBanner({ product, reverse }: { product: Product; reverse: boolean }) {
+function ProductBanner({ product }: { product: Product }) {
   const models = modelImages(product);
   const garments = garmentImages(product);
   const primary = models[0];
   const secondary = garments[0] ?? models[1] ?? models[0];
 
   return (
-    <article className={`show-banner ${reverse ? 'show-banner--rev' : ''}`}>
+    <article className="show-banner">
       <div className="show-media">
         <ClipReveal className="show-frame">
           <SharedImage
@@ -48,7 +49,7 @@ function ProductBanner({ product, reverse }: { product: Product; reverse: boolea
             kind="card"
             url={primary?.url ?? ''}
             alt={`${product.name} — look`}
-            sizes="(max-width: 900px) 50vw, 34vw"
+            sizes="(max-width: 900px) 100vw, 50vw"
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />
@@ -58,7 +59,7 @@ function ProductBanner({ product, reverse }: { product: Product; reverse: boolea
             src={secondary?.url ?? ''}
             alt={`${product.name} — detail`}
             fill
-            sizes="(max-width: 900px) 50vw, 34vw"
+            sizes="(max-width: 900px) 100vw, 50vw"
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />

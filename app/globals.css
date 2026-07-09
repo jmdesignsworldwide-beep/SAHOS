@@ -1686,21 +1686,23 @@ select {
   flex-direction: column;
   gap: clamp(4rem, 9vw, 8rem);
 }
+/* Each banner: the two shots side by side full-width, info centered below. */
 .show-banner {
-  display: grid;
-  grid-template-columns: 1.35fr 0.65fr;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3vw, 2rem);
 }
 .show-media {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(0.5rem, 1.5vw, 1rem);
+  gap: clamp(8px, 1vw, 16px); /* thin cream seam between the two images */
+  width: 100%;
 }
 .show-frame {
   position: relative;
-  aspect-ratio: 3 / 4;
   overflow: hidden;
+  /* generous editorial height, capped so ~2 products read per screen */
+  height: clamp(340px, 46vh, 560px);
 }
 .show-frame img,
 .show-frame .smart-image-fallback {
@@ -1709,11 +1711,12 @@ select {
 .show-info {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.55rem;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
 }
 .show-info__kicker {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
 }
 .show-info__name {
   font-family: var(--font-cormorant), serif;
@@ -1727,7 +1730,8 @@ select {
   font-style: italic;
   color: var(--muted);
   font-size: 1.1rem;
-  max-width: 30ch;
+  max-width: 34ch;
+  margin-inline: auto;
 }
 .show-info__price {
   color: var(--ink);
@@ -1737,23 +1741,14 @@ select {
 .show-info__cta {
   margin-top: 0.9rem;
 }
-@media (min-width: 900px) {
-  .show-banner--rev .show-media {
-    order: 2;
-  }
-  .show-banner--rev .show-info {
-    order: 1;
-    align-items: flex-end;
-    text-align: right;
-  }
-}
+/* Mobile: the two images stack vertically, full width, info below. */
 @media (max-width: 900px) {
-  .show-banner {
+  .show-media {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: clamp(8px, 2.5vw, 14px);
   }
-  .show-info {
-    align-items: flex-start !important;
-    text-align: left !important;
+  .show-frame {
+    height: auto;
+    aspect-ratio: 4 / 5;
   }
 }
