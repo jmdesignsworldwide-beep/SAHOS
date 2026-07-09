@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getProduct, modelImages, garmentImages } from '@/lib/products';
-import { getModelImages, getGarmentImages } from '@/lib/gallery';
+import { getProduct, modelImages } from '@/lib/products';
+import { getModelImages } from '@/lib/gallery';
 import { fetchProductBySlug, fetchAllProducts } from '@/lib/catalog';
 import { Gallery } from '@/components/product/Gallery';
 import { BuyPanel } from '@/components/product/BuyPanel';
-import { Product360 } from '@/components/product/Product360';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Footer } from '@/components/layout/Footer';
 import { FadeUp } from '@/components/motion/Reveal';
@@ -40,15 +39,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
         ? getModelImages(product.slug, product.name)
         : modelImages(staticFallback);
 
-  const dbGarment = dbProduct ? garmentImages(dbProduct) : [];
-  const garmentList =
-    dbGarment.length > 0
-      ? dbGarment
-      : getGarmentImages(product.slug, product.name).length > 0
-        ? getGarmentImages(product.slug, product.name)
-        : garmentImages(staticFallback);
-  const frames = garmentList.map((g) => ({ url: g.url, alt: g.alt }));
-
   const all = await fetchAllProducts();
   const related = all.filter((p) => p.slug !== product.slug).slice(0, 3);
 
@@ -60,21 +50,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
           <Gallery images={gallery} name={product.name} slug={product.slug} />
           <BuyPanel product={product} />
         </div>
-
-        {/* Secondary 360 module — a lux complement, never the protagonist */}
-        {frames.length > 0 && (
-          <section className="viewer-section">
-            <div className="viewer-section__head">
-              <FadeUp as="p" className="label">
-                The piece, in the round
-              </FadeUp>
-              <FadeUp as="h2" className="viewer-section__title" delay={0.05}>
-                {product.name} — 360°
-              </FadeUp>
-            </div>
-            <Product360 images={frames} label={product.name} />
-          </section>
-        )}
 
         {/* You may also like */}
         {related.length > 0 && (
