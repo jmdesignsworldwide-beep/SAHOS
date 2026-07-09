@@ -163,8 +163,8 @@ export function PhotoManager({ productId, images }: { productId: string; images:
       <Section
         productId={productId}
         type="garment_360"
-        title="Fotos de prenda (360°)"
-        hint="Frente · lado · espalda"
+        title="Fotos de prenda (detalle)"
+        hint="Detalle de la prenda · frente · lado · espalda"
         images={garment}
         max={3}
       />

@@ -1134,92 +1134,6 @@ a {
 }
 
 /* 360 module */
-.viewer-section {
-  padding: clamp(4rem, 10vw, 9rem) var(--edge);
-  background: #faf9f8;
-  margin-top: clamp(4rem, 8vw, 7rem);
-}
-.viewer-section__head {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-.viewer-section__title {
-  font-family: var(--font-cormorant), serif;
-  font-weight: 300;
-  font-size: clamp(1.6rem, 3.5vw, 2.6rem);
-}
-.viewer {
-  max-width: 620px;
-  margin-inline: auto;
-  user-select: none;
-}
-.viewer__stage {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  cursor: grab;
-  touch-action: pan-y;
-}
-.viewer__stage:active {
-  cursor: grabbing;
-}
-.viewer__frame {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.35s ease;
-  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.08));
-}
-.viewer__frame img,
-.viewer__frame .smart-image-fallback {
-  object-fit: contain;
-}
-.viewer__controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-.viewer__dots {
-  display: flex;
-  gap: 0.4rem;
-}
-.viewer__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #d8d6d2;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.3s ease, transform 0.3s ease;
-}
-.viewer__dot.is-active {
-  background: #1a1a18;
-  transform: scale(1.3);
-}
-.viewer__auto {
-  background: none;
-  border: 1px solid #d8d6d2;
-  border-radius: 999px;
-  padding: 0.5rem 1.1rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: #767470;
-}
-.viewer__hint {
-  text-align: center;
-  margin-top: 1rem;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #a5a29c;
-}
-
 /* you may also like */
 .related {
   padding: clamp(4rem, 9vw, 8rem) var(--edge);
@@ -1612,8 +1526,7 @@ select {
 .pcard__media,
 .gallery__frame,
 .story-figure,
-.show-frame,
-.viewer-section {
+.show-frame {
   background: var(--cream-2);
 }
 
@@ -1649,8 +1562,7 @@ select {
 .footer__grid,
 .footer,
 .acc,
-.acc__item,
-.viewer-section {
+.acc__item {
   border-color: var(--line);
 }
 .footer {
