@@ -99,7 +99,7 @@ export async function POST(req: Request) {
         shipping_cents: String(SHIPPING_FLAT_CENTS),
       },
       success_url: `${base}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${base}/collection`,
+      cancel_url: `${base}/#collection`,
     });
 
     return NextResponse.json({ url: session.url });

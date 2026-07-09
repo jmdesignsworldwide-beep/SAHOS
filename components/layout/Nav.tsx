@@ -22,7 +22,7 @@ export function Nav() {
     <header className={`nav ${scrolled ? 'nav--solid' : ''}`}>
       <nav className="nav__inner">
         <div className="nav__group">
-          <Link href="/collection" className="nav__link">
+          <Link href="/#collection" className="nav__link">
             Collection
           </Link>
           <Link href="/our-story" className="nav__link">
