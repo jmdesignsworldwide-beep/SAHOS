@@ -1616,49 +1616,36 @@ select {
 /* =========================================================================
    Brand banner (replaces the loose manifesto text) — lookbook cover
    ========================================================================= */
+/* Full-bleed burgundy band: a distinct horizontal strip in the brand wine,
+   edge to edge, with the collection's guiding phrase in cream inside it. */
 .brandbanner {
-  padding: clamp(5rem, 13vw, 11rem) var(--edge);
+  padding: clamp(3rem, 7vw, 5rem) var(--edge);
   text-align: center;
-  background: var(--cream);
+  background: var(--wine-deep);
 }
 .brandbanner__inner {
-  max-width: 840px;
+  max-width: 900px;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.15rem;
-}
-.brandbanner__sub {
-  font-family: var(--font-cormorant), serif;
-  font-style: italic;
-  font-weight: 400;
-  font-size: clamp(1.35rem, 3.2vw, 2.15rem);
-  color: var(--wine);
-  letter-spacing: 0.01em;
+  gap: 1rem;
 }
 .brandbanner__rule {
   display: block;
-  width: 68px;
+  width: 60px;
   height: 1px;
   background: var(--gold);
-  margin: 0.25rem 0;
+  opacity: 0.85;
 }
 .brandbanner__title {
   font-family: var(--font-cormorant), serif;
   font-weight: 300;
-  font-size: clamp(2.2rem, 6vw, 4.6rem);
-  line-height: 1.06;
-  letter-spacing: -0.01em;
-  color: var(--wine);
-  max-width: 18ch;
-}
-.brandbanner__body {
-  font-family: var(--font-cormorant), serif;
-  color: var(--muted);
-  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-  line-height: 1.7;
-  max-width: 48ch;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: 0.005em;
+  color: var(--cream);
+  max-width: 22ch;
 }
 
 /* =========================================================================
