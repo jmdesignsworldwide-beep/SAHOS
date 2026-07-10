@@ -44,6 +44,15 @@ export const SITE_IMAGE_SLOTS: SiteImageSlot[] = [
     defaultAlt: 'SAHOS velvet hangers and packaging',
   },
   {
+    key: 'home_uniquely',
+    group: 'Inicio',
+    label: 'Uniquely Yours',
+    // No dedicated /public still yet — the elegant SAHOS placeholder (marked
+    // "Uniquely Yours") shows until the owner uploads a photo to this slot.
+    fallback: '/home/uniquely-yours.jpg',
+    defaultAlt: 'SAHOS — uniquely yours, designed with intention',
+  },
+  {
     key: 'campaign_2',
     group: 'Inicio',
     label: 'Campaña — «Made to be seen»',

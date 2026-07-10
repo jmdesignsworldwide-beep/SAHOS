@@ -660,6 +660,19 @@ a {
   .house {
     grid-template-columns: 1.1fr 0.9fr;
   }
+  /* Mirrored sibling ("Uniquely Yours"): image on the RIGHT, text on the LEFT.
+     The DOM keeps the image first (so on mobile it still stacks image-on-top);
+     on desktop we just swap the two into place with `order`, and widen the
+     right (image) column to match the House proportions mirrored. */
+  .house--reverse {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+  .house--reverse > :not(.house__media) {
+    order: 1;
+  }
+  .house--reverse .house__media {
+    order: 2;
+  }
 }
 .house__media {
   position: relative;
