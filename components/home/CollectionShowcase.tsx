@@ -8,12 +8,13 @@ import { SmartImage } from '@/components/ui/SmartImage';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
 import type { Product } from '@/lib/types';
 
-// The Marilyn Collection, as stacked editorial banners (one per piece). Each
-// banner shows two product shots stacked full-bleed, with an editorial index
-// number, name, subtitle and a SHOP link centered below (price lives on the
-// product page, not on the showcase). The primary shot uses SharedImage so the
-// collection→product photo morph still fires. The shots are shown WHOLE
-// (object-fit: contain on a cream field) so the full garment is visible.
+// The Marilyn Collection, as editorial banners (one per piece). Each banner
+// shows two product shots SIDE BY SIDE (50/50, full-bleed), with an editorial
+// index number, name, subtitle and a SHOP link centered below (price lives on
+// the product page, not on the showcase). The primary shot uses SharedImage so
+// the collection→product photo morph still fires. Both shots are fixed-height
+// cream wells — identical across all five pieces — with the photo shown WHOLE
+// (object-fit: contain) so the full garment is always visible, never cropped.
 export function CollectionShowcase({ products = PRODUCTS }: { products?: Product[] }) {
   return (
     <section className="showcase" id="collection">
