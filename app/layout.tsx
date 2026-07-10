@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Jost, Cormorant_Garamond } from 'next/font/google';
+import { Jost, Cormorant_Garamond, Poiret_One } from 'next/font/google';
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
 
@@ -18,6 +18,16 @@ const cormorant = Cormorant_Garamond({
   weight: ['300', '400'],
   style: ['normal', 'italic'],
   variable: '--font-cormorant',
+  display: 'swap',
+});
+
+// The brand wordmark. The SAHOS logo is thin, wide-tracked Art-Deco geometric
+// lettering; Poiret One is the closest web face and is reserved ONLY for the
+// centered nav wordmark so it reads as the brand mark, not UI text.
+const poiret = Poiret_One({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-wordmark',
   display: 'swap',
 });
 
@@ -53,7 +63,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jost.variable} ${cormorant.variable}`}>
+    <html lang="en" className={`${jost.variable} ${cormorant.variable} ${poiret.variable}`}>
       <body>
         <AppShell>{children}</AppShell>
       </body>
