@@ -7,12 +7,12 @@ import { SharedImage } from '@/components/product/SharedImage';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
 import { useShotParallax } from '@/hooks/useReveal';
-import { formatPrice } from '@/lib/format';
 import type { Product } from '@/lib/types';
 
 // The Marilyn Collection, as stacked editorial banners (one per piece). Each
 // banner shows two product shots stacked full-bleed, with an editorial index
-// number, name, subtitle, price and a SHOP link centered below. The primary
+// number, name, subtitle and a SHOP link centered below (price lives on the
+// product page, not on the showcase). The primary
 // shot uses SharedImage so the collection→product photo morph still fires; both
 // shots drift on a slow parallax. Banners stack vertically down the page.
 export function CollectionShowcase({ products = PRODUCTS }: { products?: Product[] }) {
@@ -89,10 +89,7 @@ function ProductBanner({ product, index }: { product: Product; index: number }) 
         <FadeUp as="p" className="show-info__sub" delay={0.08}>
           {product.subtitle}
         </FadeUp>
-        <FadeUp as="p" className="show-info__price" delay={0.12}>
-          {formatPrice(product.priceCents, product.currency)}
-        </FadeUp>
-        <FadeUp as="div" delay={0.16}>
+        <FadeUp as="div" delay={0.12}>
           <Link href={`/product/${product.slug}`} className="btn-fill show-info__cta" data-cursor="interactive">
             Shop
           </Link>

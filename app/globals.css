@@ -1799,12 +1799,9 @@ select {
   max-width: 34ch;
   margin-inline: auto;
 }
-.show-info__price {
-  color: var(--ink);
-  font-size: 1rem;
-  letter-spacing: 0.03em;
-}
 .show-info__cta {
-  margin-top: 0.9rem;
+  /* price removed from the showcase — give the SHOP pill a touch more air so
+     the subtitle and button stay balanced. */
+  margin-top: clamp(1.1rem, 2.2vw, 1.6rem);
 }
 /* Mobile: same stacked full-width block; the uniform 16:9 ratio carries over. */
