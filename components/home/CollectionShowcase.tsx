@@ -8,13 +8,13 @@ import { SmartImage } from '@/components/ui/SmartImage';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
 import type { Product } from '@/lib/types';
 
-// The Marilyn Collection, as editorial banners (one per piece). Each banner
-// shows two product shots SIDE BY SIDE (50/50, full-bleed), with an editorial
-// index number, name, subtitle and a SHOP link centered below (price lives on
-// the product page, not on the showcase). The primary shot uses SharedImage so
-// the collection→product photo morph still fires. Both shots are fixed-height
-// cream wells — identical across all five pieces — with the photo shown WHOLE
-// (object-fit: contain) so the full garment is always visible, never cropped.
+// The Marilyn Collection, as editorial banners (one per piece), Gucci-style.
+// Each banner shows two product shots SIDE BY SIDE (50/50, full-bleed) at one
+// fixed height shared by every piece. The piece's index, name, italic subtitle
+// and a SHOP link are overlaid on the FIRST (left) shot, bottom-left, in white
+// over a soft corner scrim so they read over any photo; the second (right) shot
+// stays clean. The primary shot uses SharedImage so the collection→product photo
+// morph still fires (SHOP and the image both lead to the product page).
 export function CollectionShowcase({ products = PRODUCTS }: { products?: Product[] }) {
   return (
     <section className="showcase" id="collection">
@@ -37,13 +37,13 @@ export function CollectionShowcase({ products = PRODUCTS }: { products?: Product
   );
 }
 
-// One frame: clip-reveal wrapper holding the image. No parallax zoom here — the
-// image is shown WHOLE (object-fit: contain), so any scale/scrub would re-crop
-// the garment. The frame paints a cream field behind the letterboxed photo.
-function Shot({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+// One frame: a fixed-height clip-reveal well holding the image (object-fit:
+// cover) plus, optionally, an editorial overlay pinned to its bottom-left.
+function Shot({ children, delay = 0, overlay }: { children: ReactNode; delay?: number; overlay?: ReactNode }) {
   return (
     <ClipReveal className="show-frame" delay={delay}>
       {children}
+      {overlay}
     </ClipReveal>
   );
 }
@@ -55,16 +55,27 @@ function ProductBanner({ product, index }: { product: Product; index: number }) 
   const secondary = garments[0] ?? models[1] ?? models[0];
   const no = String(index).padStart(2, '0');
 
+  const overlay = (
+    <div className="show-overlay">
+      <p className="show-overlay__index">N&deg; {no}</p>
+      <h3 className="show-overlay__name">{product.name}</h3>
+      <p className="show-overlay__sub">{product.subtitle}</p>
+      <Link href={`/product/${product.slug}`} className="show-overlay__cta" data-cursor="interactive">
+        Shop
+      </Link>
+    </div>
+  );
+
   return (
     <article className="show-banner">
       <div className="show-media">
-        <Shot>
+        <Shot overlay={overlay}>
           <SharedImage
             slug={product.slug}
             kind="card"
             url={primary?.url ?? ''}
             alt={`${product.name} — look`}
-            sizes="100vw"
+            sizes="50vw"
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />
@@ -74,28 +85,11 @@ function ProductBanner({ product, index }: { product: Product; index: number }) 
             src={secondary?.url ?? ''}
             alt={`${product.name} — detail`}
             fill
-            sizes="100vw"
+            sizes="50vw"
             placeholderLabel={product.name}
             tone="#EDE4D4"
           />
         </Shot>
-      </div>
-
-      <div className="show-info">
-        <FadeUp as="p" className="label show-info__index">
-          N&deg; {no}
-        </FadeUp>
-        <FadeUp as="h3" className="show-info__name" delay={0.04}>
-          {product.name}
-        </FadeUp>
-        <FadeUp as="p" className="show-info__sub" delay={0.08}>
-          {product.subtitle}
-        </FadeUp>
-        <FadeUp as="div" delay={0.12}>
-          <Link href={`/product/${product.slug}`} className="btn-fill show-info__cta" data-cursor="interactive">
-            Shop
-          </Link>
-        </FadeUp>
       </div>
     </article>
   );
