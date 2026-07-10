@@ -1793,22 +1793,21 @@ select {
   display: flex;
   flex-direction: column;
 }
-/* Full-bleed: the two shots sit SIDE BY SIDE (50/50), edge to edge, with a hair
-   of cream between them. The cream fill shows through the gap so the seam is
-   invisible against the page. */
+/* Full-bleed: the two shots sit SIDE BY SIDE (50/50), edge to edge, FLUSH — no
+   gap — so they read as one continuous image block across the screen. */
 .show-media {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2px;
+  gap: 0;
   width: 100vw;
   max-width: 100vw;
   margin-inline: calc(50% - 50vw);
-  background: var(--cream);
   font-size: 0;
 }
-/* Every shot is a fixed-height well — IDENTICAL height across all five pieces
-   so the collection reads even. The photo fills it (object-fit: cover) now that
-   the title sits on top; cream shows only while a frame is empty/loading. */
+/* Every shot is a fixed-height well — IDENTICAL width (50%) and height across
+   all five pieces so every piece is exactly the same size. The photo COVERS the
+   well completely (object-fit: cover, centered), so there are no empty gaps,
+   cream strips or black bars around any image. */
 .show-frame {
   position: relative;
   overflow: hidden;
@@ -1819,13 +1818,14 @@ select {
 .show-frame img,
 .show-frame .smart-image-fallback {
   object-fit: cover;
+  object-position: center;
 }
-/* Mobile: the pair stacks vertically, but each shot keeps the SAME fixed-height
-   cream well, so every piece still matches every other. */
+/* Mobile: the pair stacks vertically, still FLUSH (no gap) and same fixed
+   height, so every piece matches every other. */
 @media (max-width: 760px) {
   .show-media {
     grid-template-columns: 1fr;
-    gap: 2px;
+    gap: 0;
   }
   .show-frame {
     height: clamp(420px, 66vh, 600px);
