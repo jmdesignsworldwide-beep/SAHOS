@@ -21,7 +21,7 @@ export function CollectionShowcase({ products = PRODUCTS }: { products?: Product
       <div className="showcase__head">
         <span className="rule-gold" aria-hidden />
         <FadeUp as="h2" className="showcase__title" delay={0.05}>
-          Old Hollywood Glamour, redefined
+          Five signatures
         </FadeUp>
       </div>
 
