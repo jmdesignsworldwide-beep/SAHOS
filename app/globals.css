@@ -308,13 +308,21 @@ a {
   height: var(--nav-h);
   display: flex;
   align-items: center;
-  transition: background 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease;
+  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
   border-bottom: 1px solid transparent;
-  mix-blend-mode: difference; /* stays legible over any hero */
   color: #fff;
 }
+/* Over the hero photo: the WHOLE nav is white (links, bag, and the wordmark via
+   currentColor). No blend tricks — an explicit colour that always reads, backed
+   by the hero's soft top scrim for contrast over bright areas of the photo. */
+.nav--hero {
+  color: #ffffff;
+  background: transparent;
+  border-bottom-color: transparent;
+}
+/* Over cream content (scrolled past the hero, or any page without one): dark on
+   a soft translucent bar. Exact colours are refined in the theme layer. */
 .nav--solid {
-  mix-blend-mode: normal;
   color: #1a1a18;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: saturate(180%) blur(14px);
@@ -342,7 +350,8 @@ a {
   display: block;
   width: clamp(158px, 16vw, 214px);
   aspect-ratio: 824 / 161; /* the extracted wordmark's proportions */
-  background: currentColor;
+  background: currentColor; /* white over the hero, ink on the solid bar */
+  transition: background-color 0.3s ease;
   -webkit-mask: url(/brand/sahos-wordmark.png) center / contain no-repeat;
   mask: url(/brand/sahos-wordmark.png) center / contain no-repeat;
 }
@@ -419,14 +428,13 @@ a {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* soft top wash: enough contrast under the nav wordmark to keep it legible
-     over any photo (incl. bright areas), fading out fast so the image stays
-     clean below the bar. */
+  /* soft top wash: guarantees contrast for the WHITE nav over any photo (incl.
+     bright areas), fading out fast so the image stays clean below the bar. */
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.3),
-    rgba(0, 0, 0, 0.1) 9%,
-    rgba(0, 0, 0, 0) 20%
+    rgba(0, 0, 0, 0.38),
+    rgba(0, 0, 0, 0.14) 10%,
+    rgba(0, 0, 0, 0) 22%
   );
 }
 /* The real SAHOS logo overlaid at the top of the hero, in WHITE. The art is
