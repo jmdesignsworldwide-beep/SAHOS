@@ -25,14 +25,31 @@ export function MagneticCursor() {
     let ringX = mouseX;
     let ringY = mouseY;
     let hovering = false;
+    let overBrand = false;
     let raf = 0;
+
+    // Start hidden until the first real move, so no stray ring/dot sits at the
+    // viewport centre before the pointer is used.
+    dot.style.opacity = '0';
+    ring.style.opacity = '0';
 
     const onMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
       dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
       const el = e.target as HTMLElement | null;
-      const interactive = !!el?.closest('a, button, [data-cursor="interactive"], input, select, textarea');
+      // Keep the centred brand wordmark pristine — hide the cursor entirely over
+      // it so the ring + dot never read as a symbol clashing with the letters.
+      const nowOverBrand = !!el?.closest('.nav__brand');
+      if (nowOverBrand !== overBrand) {
+        overBrand = nowOverBrand;
+        dot.style.opacity = overBrand ? '0' : '1';
+        ring.style.opacity = overBrand ? '0' : 'var(--ring-opacity, 0.55)';
+      } else if (!overBrand) {
+        dot.style.opacity = '1';
+        ring.style.opacity = 'var(--ring-opacity, 0.55)';
+      }
+      const interactive = !overBrand && !!el?.closest('a, button, [data-cursor="interactive"], input, select, textarea');
       if (interactive !== hovering) {
         hovering = interactive;
         ring.style.setProperty('--ring-scale', interactive ? '2.1' : '1');
