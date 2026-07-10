@@ -1,7 +1,6 @@
 import { Intro } from '@/components/motion/Intro';
 import { Hero } from '@/components/home/Hero';
 import { BrandBanner } from '@/components/home/BrandBanner';
-import { CollectionIntro } from '@/components/home/CollectionIntro';
 import { CollectionShowcase } from '@/components/home/CollectionShowcase';
 import { StorySection } from '@/components/home/StorySection';
 import { Campaign } from '@/components/home/Campaign';
@@ -31,7 +30,6 @@ export default async function HomePage() {
       <main>
         <Hero media={hero} />
         <BrandBanner />
-        <CollectionIntro />
         <CollectionShowcase products={products} />
         <Campaign media={campaign1} label="Campaign" tone="#D8D2CB" />
         <StorySection title="Uniquely yours, designed with intention">
