@@ -32,6 +32,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Nav />
           <BagDrawer />
           <PageTransition>{children}</PageTransition>
+          {/* Whisper-soft film grain over the whole store for an analogue,
+              editorial texture. Fixed, non-interactive, blended so it adds
+              grain without shifting colours. Kept out of the portal. */}
+          <div className="film-grain" aria-hidden />
         </SharedTransitionProvider>
       </BagProvider>
     </SmoothScrollProvider>

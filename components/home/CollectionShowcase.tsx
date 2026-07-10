@@ -6,6 +6,7 @@ import { PRODUCTS, modelImages, garmentImages } from '@/lib/products';
 import { SharedImage } from '@/components/product/SharedImage';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
+import { useShotParallax } from '@/hooks/useReveal';
 import type { Product } from '@/lib/types';
 
 // The Marilyn Collection, as editorial banners (one per piece), Gucci-style.
@@ -37,12 +38,18 @@ export function CollectionShowcase({ products = PRODUCTS }: { products?: Product
   );
 }
 
-// One frame: a fixed-height clip-reveal well holding the image (object-fit:
-// cover) plus, optionally, an editorial overlay pinned to its bottom-left.
+// One frame: a fixed-height clip-reveal well. The image sits in an inner media
+// layer that drifts slower than the scroll (subtle cinematic parallax); the
+// parallax scales/translates only the inner <img>, so the frame's measured box
+// — and the collection→product morph rect — stay exactly where they are. Any
+// overlay is a sibling of the media layer, so it never moves with the parallax.
 function Shot({ children, delay = 0, overlay }: { children: ReactNode; delay?: number; overlay?: ReactNode }) {
+  const parallaxRef = useShotParallax<HTMLDivElement>(6);
   return (
     <ClipReveal className="show-frame" delay={delay}>
-      {children}
+      <div ref={parallaxRef} className="show-frame__media">
+        {children}
+      </div>
       {overlay}
     </ClipReveal>
   );

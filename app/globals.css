@@ -1815,6 +1815,12 @@ select {
   height: clamp(440px, 62vh, 720px);
   background: var(--cream);
 }
+/* Parallax layer: fills the frame and carries the image. Kept separate from the
+   overlay so only the photo drifts on scroll. */
+.show-frame__media {
+  position: absolute;
+  inset: 0;
+}
 .show-frame img,
 .show-frame .smart-image-fallback {
   object-fit: cover;
@@ -1902,4 +1908,29 @@ select {
   color: var(--ink);
   border-color: #fff;
 }
+
+/* ── Film grain ──────────────────────────────────────────────────────────────
+   A whisper of analogue texture over the whole store. A tiny tiled SVG noise,
+   fixed to the viewport, blended with `overlay` so it adds grain around the
+   mid-tones without darkening or tinting photos/text. Non-interactive, and it
+   sits above content for a uniform texture. Very low opacity — felt, not seen.
+   `data:` image URIs are permitted by the CSP's img-src, so no asset request. */
+.film-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+  will-change: opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the grain (it doesn't move), just make doubly sure it stays flat. */
+  .film-grain {
+    opacity: 0.035;
+  }
+}
+
 /* Mobile: same stacked full-width block; the uniform 16:9 ratio carries over. */
