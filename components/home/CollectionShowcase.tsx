@@ -19,9 +19,10 @@ export function CollectionShowcase({ products = PRODUCTS }: { products?: Product
   return (
     <section className="showcase" id="collection">
       <div className="showcase__head">
-        <FadeUp as="p" className="label showcase__kicker">
+        <FadeUp as="h2" className="showcase__title showcase__collection">
           The Marilyn Collection
         </FadeUp>
+        <span className="rule-gold" aria-hidden />
         <FadeUp as="p" className="label showcase__index" delay={0.05}>
           N&deg; 01 · Summer &rsquo;26
         </FadeUp>

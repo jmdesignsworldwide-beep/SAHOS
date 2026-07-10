@@ -1755,10 +1755,16 @@ select {
   background: var(--gold);
   opacity: 0.55;
 }
+/* the collection title — the protagonist of this section (serif burgundy) */
+.showcase__collection {
+  margin-bottom: clamp(1.1rem, 2.4vw, 1.6rem);
+}
+/* "N° 01 · Summer '26" — legible and elegant under the title, not a tiny label */
 .showcase__index {
   color: var(--gold);
-  letter-spacing: 0.3em;
-  opacity: 0.9;
+  letter-spacing: 0.32em;
+  opacity: 0.95;
+  font-size: clamp(0.85rem, 1.3vw, 1rem);
 }
 .showcase__title {
   font-family: var(--font-cormorant), serif;
