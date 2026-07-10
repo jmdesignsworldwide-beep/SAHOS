@@ -328,16 +328,23 @@ a {
   align-items: center;
 }
 .nav__brand {
-  /* the brand wordmark — big, centered, in the logo's Art-Deco face, the
-     visual protagonist of the nav (Gucci-style). Same size on every page. */
-  font-family: var(--font-wordmark), var(--font-jost), system-ui, sans-serif;
-  text-align: center;
-  letter-spacing: 0.34em;
-  font-size: clamp(1.5rem, 2.4vw, 2.25rem);
-  line-height: 1;
-  font-weight: 400;
-  padding-left: 0.34em; /* optical centering for the wide right-hand tracking */
-  white-space: nowrap;
+  /* the brand wordmark — the real SAHOS logotype (its exact lettering), big and
+     centered, the visual protagonist of the nav. Same size on every page. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The actual logo wordmark, rendered as a mask so it is IDENTICAL to the brand
+   logotype (extracted from the logo art, emblem removed) yet takes the nav's
+   adaptive colour via currentColor — legible over the hero (mix-blend) and on
+   the solid cream bar alike. */
+.nav__wordmark {
+  display: block;
+  width: clamp(158px, 16vw, 214px);
+  aspect-ratio: 824 / 161; /* the extracted wordmark's proportions */
+  background: currentColor;
+  -webkit-mask: url(/brand/sahos-wordmark.png) center / contain no-repeat;
+  mask: url(/brand/sahos-wordmark.png) center / contain no-repeat;
 }
 .nav__group {
   display: flex;
@@ -381,12 +388,10 @@ a {
     font-size: 0.6rem;
     letter-spacing: 0.05em;
   }
-  .nav__brand {
-    /* proportionally smaller on phones, but still the brand mark; sized with
-       clear breathing room from the side links and the bag on narrow screens */
-    font-size: clamp(0.95rem, 3.8vw, 1.3rem);
-    letter-spacing: 0.2em;
-    padding-left: 0.2em;
+  .nav__wordmark {
+    /* proportionally smaller on phones, still the brand mark, with clear
+       breathing room from the side links and the bag on narrow screens */
+    width: clamp(112px, 34vw, 150px);
   }
 }
 

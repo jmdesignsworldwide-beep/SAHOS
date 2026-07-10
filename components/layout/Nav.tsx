@@ -31,7 +31,7 @@ export function Nav() {
         </div>
 
         <Link href="/" className="nav__brand" aria-label="SAHOS — home">
-          SAHOS
+          <span className="nav__wordmark" aria-hidden />
         </Link>
 
         <div className="nav__group nav__group--end">
