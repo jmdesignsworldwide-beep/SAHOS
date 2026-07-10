@@ -6,15 +6,14 @@ import { PRODUCTS, modelImages, garmentImages } from '@/lib/products';
 import { SharedImage } from '@/components/product/SharedImage';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
-import { useShotParallax } from '@/hooks/useReveal';
 import type { Product } from '@/lib/types';
 
 // The Marilyn Collection, as stacked editorial banners (one per piece). Each
 // banner shows two product shots stacked full-bleed, with an editorial index
 // number, name, subtitle and a SHOP link centered below (price lives on the
-// product page, not on the showcase). The primary
-// shot uses SharedImage so the collection→product photo morph still fires; both
-// shots drift on a slow parallax. Banners stack vertically down the page.
+// product page, not on the showcase). The primary shot uses SharedImage so the
+// collection→product photo morph still fires. The shots are shown WHOLE
+// (object-fit: contain on a cream field) so the full garment is visible.
 export function CollectionShowcase({ products = PRODUCTS }: { products?: Product[] }) {
   return (
     <section className="showcase" id="collection">
@@ -37,14 +36,13 @@ export function CollectionShowcase({ products = PRODUCTS }: { products?: Product
   );
 }
 
-// One frame: clip-reveal wrapper + a slow parallax layer holding the image.
+// One frame: clip-reveal wrapper holding the image. No parallax zoom here — the
+// image is shown WHOLE (object-fit: contain), so any scale/scrub would re-crop
+// the garment. The frame paints a cream field behind the letterboxed photo.
 function Shot({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
-  const parallaxRef = useShotParallax<HTMLDivElement>(6);
   return (
     <ClipReveal className="show-frame" delay={delay}>
-      <div ref={parallaxRef} className="show-frame__inner">
-        {children}
-      </div>
+      {children}
     </ClipReveal>
   );
 }

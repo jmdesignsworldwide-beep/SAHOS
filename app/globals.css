@@ -1801,21 +1801,19 @@ select {
   margin-inline: calc(50% - 50vw);
   font-size: 0; /* kill any inline-gap between the stacked frames */
 }
-/* Uniform landscape format across every piece so the collection reads even. */
+/* Each shot is shown WHOLE: the photo is letterboxed (object-fit: contain) on a
+   cream field so the full garment is visible, never cropped. A tall-ish portrait
+   frame keeps the letterbox tight so there's little empty top/bottom space. */
 .show-frame {
   position: relative;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 16 / 9;
-}
-/* parallax layer: fills the frame; its inner image is zoomed + drifts on scroll */
-.show-frame__inner {
-  position: absolute;
-  inset: 0;
+  height: clamp(460px, 78vh, 860px);
+  background: var(--cream);
 }
 .show-frame img,
 .show-frame .smart-image-fallback {
-  object-fit: cover;
+  object-fit: contain;
 }
 .show-info {
   display: flex;
