@@ -102,10 +102,35 @@ export async function POST(req: Request) {
       cancel_url: `${base}/#collection`,
     });
 
+    if (!session.url) {
+      // A session with no URL is unusable — treat it as a failure rather than
+      // redirecting the customer to `undefined`.
+      console.error('[checkout] stripe returned a session with no url', session.id);
+      return NextResponse.json({ error: 'Could not start checkout', code: 'no_session_url' }, { status: 502 });
+    }
     return NextResponse.json({ url: session.url });
   } catch (e) {
-    // Never leak Stripe internals to the client.
+    // Always log the full error server-side (Vercel logs).
     console.error('[checkout] stripe error', e);
-    return NextResponse.json({ error: 'Could not start checkout' }, { status: 502 });
+
+    // Surface the ACTUAL reason for CONFIGURATION failures so an outage is
+    // diagnosable instead of opaque. A misconfigured or inactive live account,
+    // a bad/restricted key, or an invalid parameter all fail the whole store —
+    // the operator needs to see why. Stripe's auth/permission/invalid-request
+    // messages are safe to show (they carry no secrets). Card-level or unknown
+    // errors stay generic. These config errors don't occur in normal operation,
+    // so real customers won't see the detail once the store is set up correctly.
+    const err = e as { type?: string; code?: string; message?: string };
+    const CONFIG_ERROR_TYPES = [
+      'StripeAuthenticationError', // bad / missing / revoked secret key
+      'StripePermissionError', // restricted key lacking Checkout permission
+      'StripeInvalidRequestError', // bad param, missing price, account not enabled
+    ];
+    const detail = err?.type && CONFIG_ERROR_TYPES.includes(err.type) ? err.message : undefined;
+
+    return NextResponse.json(
+      { error: 'Could not start checkout', code: err?.code, type: err?.type, detail },
+      { status: 502 }
+    );
   }
 }
