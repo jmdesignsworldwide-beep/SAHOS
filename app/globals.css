@@ -693,8 +693,11 @@ a {
 }
 .house__body {
   color: #767470;
-  max-width: 46ch;
-  font-size: 1rem;
+  max-width: 50ch;
+  /* Editorial reading size — larger and airier than the old flat 1rem, shared
+     by both "Crafting beauty" and its mirror "Uniquely Yours". */
+  font-size: clamp(1.08rem, 1.4vw, 1.28rem);
+  line-height: 1.75;
 }
 
 /* =========================================================================
