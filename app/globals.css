@@ -1643,14 +1643,40 @@ select {
   background: linear-gradient(90deg, rgba(169, 129, 75, 0), var(--gold), rgba(169, 129, 75, 0));
 }
 .brandbanner__title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05em;
   font-family: var(--font-cormorant), serif;
   font-weight: 300;
-  font-size: clamp(1.9rem, 4.4vw, 3.3rem);
-  line-height: 1.1;
-  letter-spacing: 0.008em;
+  line-height: 1.08;
   color: var(--cream);
-  max-width: 20ch;
-  margin-inline: auto;
+}
+/* each phrase reads as one balanced line (wraps only on the narrowest screens) */
+.brandbanner__lead,
+.brandbanner__tail {
+  white-space: nowrap;
+}
+.brandbanner__lead {
+  font-size: clamp(1.9rem, 4.4vw, 3.3rem);
+  letter-spacing: 0.008em;
+}
+.brandbanner__tail {
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.5rem, 3.4vw, 2.55rem);
+  color: var(--gold-soft);
+}
+@media (max-width: 420px) {
+  .brandbanner__lead,
+  .brandbanner__tail {
+    white-space: normal; /* let it wrap gracefully on very small phones */
+  }
+}
+.brandbanner__index {
+  color: var(--gold-soft);
+  letter-spacing: 0.3em;
+  margin-top: 0.55rem;
+  opacity: 0.9;
 }
 
 /* =========================================================================
