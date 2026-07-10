@@ -25,7 +25,10 @@ export function BagDrawer() {
       if (data.url) {
         window.location.href = data.url as string;
       } else {
-        alert(data.error ?? 'Checkout is not available yet.');
+        // Show the specific reason when the server provides one (e.g. a Stripe
+        // configuration error), so a misconfiguration is obvious, not opaque.
+        const msg = data.detail ? `${data.error}: ${data.detail}` : data.error;
+        alert(msg ?? 'Checkout is not available yet.');
       }
     } catch {
       alert('Something went wrong. Please try again.');
