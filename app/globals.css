@@ -1787,66 +1787,119 @@ select {
   flex-direction: column;
   gap: clamp(5rem, 10vw, 9rem);
 }
-/* Each banner: the two shots side by side EDGE TO EDGE, info centered below. */
+/* Each banner: the two shots side by side EDGE TO EDGE; the title/SHOP is
+   overlaid on the first shot, so the banner is just the media row. */
 .show-banner {
   display: flex;
   flex-direction: column;
-  gap: clamp(2rem, 4vw, 3rem);
 }
-/* Full-bleed: two shots STACKED vertically, edge to edge, flush (0 gap). */
+/* Full-bleed: the two shots sit SIDE BY SIDE (50/50), edge to edge, with a hair
+   of cream between them. The cream fill shows through the gap so the seam is
+   invisible against the page. */
 .show-media {
-  display: block;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
   width: 100vw;
   max-width: 100vw;
   margin-inline: calc(50% - 50vw);
-  font-size: 0; /* kill any inline-gap between the stacked frames */
+  background: var(--cream);
+  font-size: 0;
 }
-/* Uniform landscape format across every piece so the collection reads even. */
+/* Every shot is a fixed-height well — IDENTICAL height across all five pieces
+   so the collection reads even. The photo fills it (object-fit: cover) now that
+   the title sits on top; cream shows only while a frame is empty/loading. */
 .show-frame {
   position: relative;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 16 / 9;
-}
-/* parallax layer: fills the frame; its inner image is zoomed + drifts on scroll */
-.show-frame__inner {
-  position: absolute;
-  inset: 0;
+  height: clamp(440px, 62vh, 720px);
+  background: var(--cream);
 }
 .show-frame img,
 .show-frame .smart-image-fallback {
   object-fit: cover;
 }
-.show-info {
+/* Mobile: the pair stacks vertically, but each shot keeps the SAME fixed-height
+   cream well, so every piece still matches every other. */
+@media (max-width: 760px) {
+  .show-media {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .show-frame {
+    height: clamp(420px, 66vh, 600px);
+  }
+}
+/* Editorial overlay on the FIRST shot: index, name, subtitle + SHOP pinned to
+   the bottom-left in white, over a soft corner scrim so it reads over any photo
+   (light or dark). The scrim is a radial darkening anchored to the bottom-left
+   corner that fades out well before it reaches the rest of the frame, so it
+   never muddies the image. The container ignores pointer events; only the text
+   and the SHOP link take them, so hovers still reach the photo. */
+.show-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: clamp(1.4rem, 2.8vw, 2.8rem);
+  text-align: left;
+  color: #fff;
+  pointer-events: none;
+  background: radial-gradient(
+    135% 115% at 0% 100%,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.34) 30%,
+    rgba(0, 0, 0, 0) 66%
+  );
 }
-.show-info__index {
-  color: var(--gold);
-  letter-spacing: 0.32em;
-  margin-bottom: 0.35rem;
+.show-overlay > * {
+  pointer-events: auto;
 }
-.show-info__name {
+.show-overlay__index {
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 0.15rem;
+}
+.show-overlay__name {
   font-family: var(--font-cormorant), serif;
   font-weight: 300;
-  font-size: clamp(2rem, 4.5vw, 3.4rem);
-  line-height: 1.04;
-  color: var(--wine);
+  font-size: clamp(1.8rem, 3.4vw, 2.9rem);
+  line-height: 1.02;
+  color: #fff;
+  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.25);
 }
-.show-info__sub {
+.show-overlay__sub {
   font-family: var(--font-cormorant), serif;
   font-style: italic;
-  color: var(--muted);
-  font-size: 1.1rem;
-  max-width: 34ch;
-  margin-inline: auto;
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 0.85rem;
 }
-.show-info__cta {
-  /* price removed from the showcase — give the SHOP pill a touch more air so
-     the subtitle and button stay balanced. */
-  margin-top: clamp(1.1rem, 2.2vw, 1.6rem);
+.show-overlay__cta {
+  display: inline-block;
+  padding: 0.6rem 1.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.08);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.show-overlay__cta:hover {
+  background: #fff;
+  color: var(--ink);
+  border-color: #fff;
 }
 /* Mobile: same stacked full-width block; the uniform 16:9 ratio carries over. */
