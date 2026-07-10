@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Jost, Cormorant_Garamond, Poiret_One } from 'next/font/google';
+import { Jost, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
 
@@ -21,15 +21,8 @@ const cormorant = Cormorant_Garamond({
   display: 'swap',
 });
 
-// The brand wordmark. The SAHOS logo is thin, wide-tracked Art-Deco geometric
-// lettering; Poiret One is the closest web face and is reserved ONLY for the
-// centered nav wordmark so it reads as the brand mark, not UI text.
-const poiret = Poiret_One({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-wordmark',
-  display: 'swap',
-});
+// The nav wordmark is the real SAHOS logotype, rendered from the logo art as a
+// CSS mask (see .nav__wordmark) — no web font approximates it, so none is loaded.
 
 // The nonce-based CSP (middleware.ts) requires per-request rendering so Next
 // can stamp the request's nonce onto its inline hydration scripts. Without
@@ -63,7 +56,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jost.variable} ${cormorant.variable} ${poiret.variable}`}>
+    <html lang="en" className={`${jost.variable} ${cormorant.variable}`}>
       <body>
         <AppShell>{children}</AppShell>
       </body>
