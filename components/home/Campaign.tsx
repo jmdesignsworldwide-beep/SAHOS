@@ -10,12 +10,12 @@ import type { ResolvedMedia } from '@/lib/site-images';
 // video), one line of text.
 export function Campaign({
   media,
-  line,
+  line = '',
   tone = '#DED9D3',
   label,
 }: {
   media: ResolvedMedia;
-  line: string;
+  line?: string;
   tone?: string;
   label: string;
 }) {
@@ -61,9 +61,11 @@ export function Campaign({
           tone={tone}
         />
       </div>
-      <div className="campaign__line">
-        <h2>{line}</h2>
-      </div>
+      {line && (
+        <div className="campaign__line">
+          <h2>{line}</h2>
+        </div>
+      )}
     </section>
   );
 }

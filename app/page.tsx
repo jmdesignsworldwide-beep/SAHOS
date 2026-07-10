@@ -1,7 +1,9 @@
 import { Intro } from '@/components/motion/Intro';
 import { Hero } from '@/components/home/Hero';
 import { BrandBanner } from '@/components/home/BrandBanner';
+import { CollectionIntro } from '@/components/home/CollectionIntro';
 import { CollectionShowcase } from '@/components/home/CollectionShowcase';
+import { StorySection } from '@/components/home/StorySection';
 import { Campaign } from '@/components/home/Campaign';
 import { House } from '@/components/home/House';
 import { Footer } from '@/components/layout/Footer';
@@ -29,10 +31,18 @@ export default async function HomePage() {
       <main>
         <Hero media={hero} />
         <BrandBanner />
+        <CollectionIntro />
         <CollectionShowcase products={products} />
-        <Campaign media={campaign1} label="Campaign" line="Not a wardrobe. A confession." tone="#D8D2CB" />
+        <Campaign media={campaign1} label="Campaign" tone="#D8D2CB" />
+        <StorySection title="Uniquely yours, designed with intention">
+          In a world of fast trends, SAHOS stands for something slow and intentional. We believe
+          every woman deserves to feel confident in her clothes, without the need for tailoring or
+          enhancements. Our designs are meticulously developed to complement all body types,
+          focusing on curves and waists to ensure you feel your absolute best. It&rsquo;s this
+          dedication that makes each piece truly special and takes significant time to perfect.
+        </StorySection>
+        <Campaign media={campaign2} label="Campaign" tone="#CFC9C1" />
         <House media={packaging} />
-        <Campaign media={campaign2} label="Campaign" line="Made to be seen." tone="#CFC9C1" />
       </main>
       <Footer />
     </>
