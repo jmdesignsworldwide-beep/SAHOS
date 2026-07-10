@@ -142,7 +142,7 @@ export function BuyPanel({ product }: { product: Product }) {
               <li>Color — {product.color}</li>
               <li>Atelier reference — {product.factoryRef}</li>
               <li>Sizes — XS to L</li>
-              <li>Composition — silk-like satin</li>
+              <li>Composition — {product.composition ?? 'poly cloth with 5% spandex'}</li>
             </ul>
           </Accordion.Item>
           <Accordion.Item title="Shipping &amp; Returns">

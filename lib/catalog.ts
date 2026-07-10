@@ -28,6 +28,7 @@ function mapRow(row: any): Product {
     subtitle: row.subtitle ?? '',
     description: row.description ?? '',
     details: staticProduct(row.slug)?.details ?? [],
+    composition: staticProduct(row.slug)?.composition,
     color: row.color ?? '',
     factoryRef: row.factory_ref ?? '',
     priceCents: row.price_cents ?? null,

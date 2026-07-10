@@ -36,6 +36,9 @@ export interface Product {
   description: string;
   /** bullet spec lines for the Details accordion */
   details: string[];
+  /** material composition shown under Specifications (e.g. "poly cloth with 5%
+   *  spandex"). Optional — falls back to the collection's default when unset. */
+  composition?: string;
   color: string;
   factoryRef: string;
   /** price in cents; null until Marien sets the real price (TODO_PRECIO) */
