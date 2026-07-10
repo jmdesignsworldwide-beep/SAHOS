@@ -414,8 +414,15 @@ a {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* clean image: only a whisper-soft top wash so the nav stays legible */
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0) 18%);
+  /* soft top wash: enough contrast under the nav wordmark to keep it legible
+     over any photo (incl. bright areas), fading out fast so the image stays
+     clean below the bar. */
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3),
+    rgba(0, 0, 0, 0.1) 9%,
+    rgba(0, 0, 0, 0) 20%
+  );
 }
 /* The real SAHOS logo overlaid at the top of the hero, in WHITE. The art is
    gold-on-black; grayscale+brightness washes it white and `screen` drops the
