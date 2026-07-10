@@ -13,7 +13,6 @@ const BUCKET = 'product-images';
 // Site images live in the same bucket under this prefix (no new bucket needed).
 const SITE_PREFIX = 'site';
 const SIZES = ['XS', 'S', 'M', 'L'] as const;
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -298,56 +297,110 @@ export async function setStockModeAction(formData: FormData): Promise<ActionStat
 }
 
 // --------------------------------------------------------------------------
-// Photos
+// Product photos — SAME direct-to-Storage flow as the site images.
+//
+// The file NEVER travels through this Server Action / serverless function body
+// (Next caps that at 1MB, Vercel at ~4.5MB — which was silently failing the
+// owner's large product photos). Instead the browser uploads straight to
+// Storage via a short-lived signed URL, then records the resulting public URL:
+//   1) createProductImageUpload → auth + validation, returns a signed upload
+//      URL/token for a server-chosen, sanitized path.
+//   2) the browser uploads the bytes to Storage with that token.
+//   3) saveProductImageMeta → records the public URL as a product_images row.
+// service_role is never used; every step is whitelist-validated and RLS-bound.
 // --------------------------------------------------------------------------
-export async function uploadImageAction(formData: FormData): Promise<ActionState> {
+const IMAGE_CAP: Record<'model' | 'garment_360', number> = { model: 10, garment_360: 3 };
+
+export async function createProductImageUpload(formData: FormData): Promise<UploadTicket> {
   try {
     await requireUser();
-    const supabase = createSSRClient();
+    const ip = clientIp(headers());
+    const limit = rateLimit(`product-image:${ip}`, 40, 60_000);
+    if (!limit.ok) return { error: 'Demasiadas solicitudes. Espera un momento.' };
 
     const productId = str(formData.get('product_id'), 64);
-    const type = str(formData.get('type'), 20);
-    const file = formData.get('file');
+    const type = str(formData.get('type'), 20) as 'model' | 'garment_360';
+    const contentType = str(formData.get('content_type'), 100);
     if (!productId) return { error: 'Falta el producto.' };
     if (type !== 'model' && type !== 'garment_360') return { error: 'Tipo de foto inválido.' };
-    if (!(file instanceof File) || file.size === 0) return { error: 'Selecciona una imagen.' };
-    if (file.size > MAX_UPLOAD_BYTES) return { error: 'La imagen supera el máximo de 10MB.' };
+    const ext = ALLOWED_MIME[contentType];
+    if (!ext) {
+      return { error: 'Formato no permitido. Usa JPG, PNG o WebP (las fotos HEIC del iPhone no sirven).' };
+    }
 
-    const ext = ALLOWED_MIME[file.type];
-    if (!ext) return { error: 'Formato no permitido. Usa JPG, PNG o WebP.' };
-
-    // model galleries cap at 10 photos
+    const supabase = createSSRClient(); // authenticated admin — RLS still applies
+    const cap = IMAGE_CAP[type];
     const { count } = await supabase
       .from('product_images')
       .select('id', { count: 'exact', head: true })
       .eq('product_id', productId)
       .eq('type', type);
-    if (type === 'model' && (count ?? 0) >= 10) return { error: 'Máximo 10 fotos de modelo por pieza.' };
+    if ((count ?? 0) >= cap) {
+      return { error: `Máximo ${cap} ${type === 'model' ? 'fotos de modelo' : 'fotos de prenda'} por pieza.` };
+    }
 
+    // Server-controlled, sanitized, unguessable path: <productId>/<type>/<uuid>.<ext>.
     const key = `${productId}/${type}/${crypto.randomUUID()}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from(BUCKET)
-      .upload(key, file, { contentType: file.type, upsert: false });
-    if (upErr) return { error: `No se pudo subir: ${upErr.message}` };
+    const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(key);
+    if (error || !data) {
+      return { error: `No se pudo iniciar la subida: ${error?.message ?? 'inténtalo de nuevo'}` };
+    }
 
     const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(key);
-    const position = (count ?? 0) + 1;
+    return { ok: true, path: data.path, token: data.token, publicUrl: pub.publicUrl };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'No se pudo iniciar la subida.' };
+  }
+}
+
+export async function saveProductImageMeta(formData: FormData): Promise<ActionState> {
+  try {
+    await requireUser();
+    const ip = clientIp(headers());
+    const limit = rateLimit(`product-image:${ip}`, 40, 60_000);
+    if (!limit.ok) return { error: 'Demasiadas solicitudes. Espera un momento.' };
+
+    const supabase = createSSRClient();
+    const productId = str(formData.get('product_id'), 64);
+    const type = str(formData.get('type'), 20) as 'model' | 'garment_360';
+    const rawUrl = str(formData.get('image_url'), 600);
+    if (!productId) return { error: 'Falta el producto.' };
+    if (type !== 'model' && type !== 'garment_360') return { error: 'Tipo de foto inválido.' };
+
+    // The URL must be one of OUR public Storage URLs, under THIS product's
+    // folder — a client can never point a row at an arbitrary URL.
+    const validPrefix = `${env.supabaseUrl}/storage/v1/object/public/${BUCKET}/${productId}/${type}/`;
+    if (!rawUrl || !rawUrl.startsWith(validPrefix)) return { error: 'URL de imagen inválida.' };
+
+    const cap = IMAGE_CAP[type];
+    const { count } = await supabase
+      .from('product_images')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId)
+      .eq('type', type);
+    if ((count ?? 0) >= cap) {
+      const orphan = storagePathFromUrl(rawUrl);
+      if (orphan) await supabase.storage.from(BUCKET).remove([orphan]);
+      return { error: `Máximo ${cap} ${type === 'model' ? 'fotos de modelo' : 'fotos de prenda'} por pieza.` };
+    }
+
     const { error: insErr } = await supabase.from('product_images').insert({
       product_id: productId,
-      url: pub.publicUrl,
+      url: rawUrl,
       type,
-      position,
+      position: (count ?? 0) + 1,
       alt: '',
     });
     if (insErr) {
-      await supabase.storage.from(BUCKET).remove([key]); // roll back the upload
+      const orphan = storagePathFromUrl(rawUrl); // roll back the uploaded file
+      if (orphan) await supabase.storage.from(BUCKET).remove([orphan]);
       return { error: `No se pudo registrar la foto: ${insErr.message}` };
     }
 
     revalidateStore();
     return { ok: true };
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'No se pudo subir la imagen.' };
+    return { error: e instanceof Error ? e.message : 'No se pudo registrar la foto.' };
   }
 }
 
