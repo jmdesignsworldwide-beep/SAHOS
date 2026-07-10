@@ -1755,6 +1755,11 @@ select {
   background: var(--gold);
   opacity: 0.55;
 }
+.showcase__index {
+  color: var(--gold);
+  letter-spacing: 0.3em;
+  opacity: 0.9;
+}
 .showcase__title {
   font-family: var(--font-cormorant), serif;
   font-weight: 300;
