@@ -53,6 +53,16 @@ export const SITE_IMAGE_SLOTS: SiteImageSlot[] = [
     defaultAlt: 'SAHOS — uniquely yours, designed with intention',
   },
   {
+    key: 'home_marilyn_bg',
+    group: 'Inicio',
+    label: 'Marilyn Collection BG',
+    // Cinematic full-bleed background behind the "The Marilyn Collection" title.
+    // Empty until the owner uploads — a dark burgundy field shows in the
+    // meantime (never a black hole).
+    fallback: '/home/marilyn-collection-bg.jpg',
+    defaultAlt: 'SAHOS — The Marilyn Collection',
+  },
+  {
     key: 'campaign_2',
     group: 'Inicio',
     label: 'Campaña — «Made to be seen»',

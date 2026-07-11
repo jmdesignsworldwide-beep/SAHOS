@@ -61,6 +61,7 @@ insert into site_images (slot_key) values
   ('campaign_1'),
   ('house_packaging'),
   ('home_uniquely'),
+  ('home_marilyn_bg'),
   ('campaign_2'),
   ('our_story_founder'),
   ('our_story_philosophy'),

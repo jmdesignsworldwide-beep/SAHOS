@@ -24,6 +24,7 @@ export default async function HomePage() {
   const campaign2 = resolveSiteMedia(siteImages, 'campaign_2');
   const packaging = resolveSiteMedia(siteImages, 'house_packaging');
   const uniquely = resolveSiteMedia(siteImages, 'home_uniquely');
+  const marilynBg = resolveSiteMedia(siteImages, 'home_marilyn_bg');
 
   return (
     <>
@@ -31,7 +32,7 @@ export default async function HomePage() {
       <main>
         <Hero media={hero} />
         <BrandBanner />
-        <CollectionShowcase products={products} />
+        <CollectionShowcase products={products} marilynBg={marilynBg} />
         <Campaign media={campaign1} label="Campaign" tone="#D8D2CB" />
         <UniquelyYours media={uniquely} />
         <Campaign media={campaign2} label="Campaign" tone="#CFC9C1" />
