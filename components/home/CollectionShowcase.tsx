@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { PRODUCTS, modelImages, garmentImages } from '@/lib/products';
 import { SharedImage } from '@/components/product/SharedImage';
 import { SmartImage } from '@/components/ui/SmartImage';
-import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
+import { ClipReveal } from '@/components/motion/Reveal';
+import { MarilynTitle } from '@/components/home/MarilynTitle';
 import { useShotParallax } from '@/hooks/useReveal';
+import type { ResolvedMedia } from '@/lib/site-images';
 import type { Product } from '@/lib/types';
 
 // The Marilyn Collection, as editorial banners (one per piece), Gucci-style.
@@ -16,18 +18,16 @@ import type { Product } from '@/lib/types';
 // over a soft corner scrim so they read over any photo; the second (right) shot
 // stays clean. The primary shot uses SharedImage so the collection→product photo
 // morph still fires (SHOP and the image both lead to the product page).
-export function CollectionShowcase({ products = PRODUCTS }: { products?: Product[] }) {
+export function CollectionShowcase({
+  products = PRODUCTS,
+  marilynBg,
+}: {
+  products?: Product[];
+  marilynBg?: ResolvedMedia;
+}) {
   return (
     <section className="showcase" id="collection">
-      <div className="showcase__head">
-        <FadeUp as="h2" className="showcase__title showcase__collection">
-          The Marilyn Collection
-        </FadeUp>
-        <span className="rule-gold" aria-hidden />
-        <FadeUp as="p" className="label showcase__index" delay={0.05}>
-          N&deg; 01 · Summer &rsquo;26
-        </FadeUp>
-      </div>
+      {marilynBg && <MarilynTitle media={marilynBg} />}
 
       <div className="showcase__banners">
         {products.map((product, i) => (

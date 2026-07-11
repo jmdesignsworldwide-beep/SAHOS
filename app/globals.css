@@ -1889,7 +1889,9 @@ select {
    Collection showcase — stacked product banners (2 shots each)
    ========================================================================= */
 .showcase {
-  padding: clamp(2rem, 5vw, 5rem) var(--edge) clamp(5rem, 12vw, 10rem);
+  /* No top padding: the cinematic title connects straight to the burgundy
+     banner above it — no cream strip in between. */
+  padding: 0 var(--edge) clamp(5rem, 12vw, 10rem);
 }
 .showcase__head {
   text-align: center;
@@ -2081,3 +2083,267 @@ select {
 }
 
 /* Mobile: same stacked full-width block; the uniform 16:9 ratio carries over. */
+
+/* ── The Marilyn Collection — cinematic title card ──────────────────────────
+   A full-bleed campaign photo under a warm dark scrim, with a slow Ken Burns
+   zoom, scrubbed parallax, animated film grain and a soft vignette; the serif
+   title fades up like film credits. Only this section — the rest of the home is
+   untouched. All motion is transform/opacity and off under reduced motion. */
+.mtitle {
+  position: relative;
+  overflow: hidden;
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  min-height: clamp(560px, 84vh, 900px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #1c0f13; /* warm charcoal-burgundy base — never a black hole */
+  isolation: isolate;
+}
+.mtitle__bg {
+  position: absolute;
+  inset: -8% 0; /* oversized so the parallax drift never reveals an edge */
+  z-index: 0;
+}
+.mtitle__kb {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+  animation: mtKenBurns 16s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.mtitle__bg img,
+.mtitle__bg .smart-image-fallback {
+  object-fit: cover;
+}
+/* Seam: the burgundy banner above bleeds into the dark section so the two
+   connect with no cream strip and no hard edge. */
+.mtitle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24%;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    #470e19 0%,
+    rgba(71, 14, 25, 0.55) 34%,
+    rgba(28, 15, 19, 0) 100%
+  );
+}
+/* warm dark scrim, darkest through the middle where the title sits */
+.mtitle__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(18, 8, 11, 0.5) 0%,
+    rgba(18, 8, 11, 0.66) 42%,
+    rgba(18, 8, 11, 0.72) 58%,
+    rgba(18, 8, 11, 0.58) 100%
+  );
+}
+/* Drifting dark fog — soft turbulent clouds that float continuously for depth
+   and atmosphere. Pre-blurred once, then only transform animates (cheap). */
+.mtitle__smoke {
+  position: absolute;
+  inset: -30%;
+  z-index: 2;
+  width: 160%;
+  height: 160%;
+  pointer-events: none;
+  opacity: 0.42;
+  filter: blur(5px);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='520'%3E%3Cfilter id='ms'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011 0.019' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.95 0 0 0 -0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23ms)'/%3E%3C/svg%3E");
+  animation: mtSmoke 30s ease-in-out infinite alternate;
+  will-change: transform;
+}
+/* Sweeping warm spotlight — a soft gold glow that travels across the frame in a
+   slow loop, lighting different zones like a cinema projector. */
+.mtitle__spot {
+  position: absolute;
+  inset: -20%;
+  z-index: 3;
+  width: 140%;
+  height: 140%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    38% 46% at 30% 38%,
+    rgba(214, 176, 108, 0.28),
+    rgba(201, 161, 74, 0.12) 38%,
+    rgba(201, 161, 74, 0) 66%
+  );
+  animation: mtSpot 18s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.mtitle__grain {
+  position: absolute;
+  inset: -50%;
+  z-index: 4;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  opacity: 0.1;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='mn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23mn)'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+  animation: mtGrain 0.6s steps(3) infinite;
+  will-change: transform;
+}
+.mtitle__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, 0.5) 100%);
+}
+.mtitle__inner {
+  position: relative;
+  z-index: 10; /* the text sits above every ambient layer + the seam */
+  padding: clamp(3.5rem, 10vh, 7rem) var(--edge);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+.mtitle [data-mt] {
+  opacity: 0; /* revealed by GSAP; the site is JS-driven (see FadeUp) */
+}
+.mtitle__kicker {
+  margin: 0;
+  color: var(--gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+}
+.mtitle__title {
+  margin: 0;
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  color: #f3ead9;
+  line-height: 1;
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.45);
+}
+.mtitle__line {
+  display: block;
+  font-size: clamp(2.1rem, 6.5vw, 4rem);
+}
+.mtitle__line em {
+  font-style: italic;
+}
+.mtitle__line--big {
+  font-size: clamp(3.2rem, 13vw, 7.5rem);
+  letter-spacing: 0.01em;
+  margin-top: 0.08em;
+}
+.mtitle__rule {
+  display: block;
+  width: 64px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.9;
+  margin: 0.55rem 0;
+}
+.mtitle__year {
+  margin: 0;
+  color: var(--gold);
+  font-size: 0.85rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+@keyframes mtKenBurns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+@keyframes mtGrain {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-4%, -3%);
+  }
+  50% {
+    transform: translate(3%, -5%);
+  }
+  75% {
+    transform: translate(-3%, 4%);
+  }
+  100% {
+    transform: translate(4%, 2%);
+  }
+}
+/* Warm spotlight travels diagonally across the frame and brightens at mid-sweep,
+   like a projector beam raking the scene. */
+@keyframes mtSpot {
+  0% {
+    transform: translate(-16%, -8%) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(18%, 10%) scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-16%, -8%) scale(1);
+    opacity: 0.55;
+  }
+}
+/* Fog drifts slowly across and up. */
+@keyframes mtSmoke {
+  0% {
+    transform: translate(-5%, 2%) scale(1.05);
+  }
+  100% {
+    transform: translate(5%, -4%) scale(1.18);
+  }
+}
+@media (max-width: 760px) {
+  .mtitle {
+    min-height: clamp(440px, 68vh, 640px);
+  }
+  /* Lighter on phones: keep the ambient effects but drop the two costly filters
+     (grain animation + the smoke's blur) so it stays smooth. The spotlight and
+     smoke keep drifting so the section still feels alive. */
+  .mtitle__grain {
+    animation: none;
+    opacity: 0.08;
+  }
+  .mtitle__smoke {
+    filter: none;
+    opacity: 0.34;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mtitle__kb,
+  .mtitle__grain,
+  .mtitle__smoke,
+  .mtitle__spot {
+    animation: none;
+  }
+  .mtitle__grain {
+    opacity: 0.05;
+  }
+  /* Hold the spotlight at a soft resting position so the static frame still
+     reads as a warm-lit scene, not a dead flat panel. */
+  .mtitle__spot {
+    transform: translate(0, 0) scale(1.1);
+    opacity: 0.7;
+  }
+  .mtitle [data-mt] {
+    opacity: 1;
+  }
+}
