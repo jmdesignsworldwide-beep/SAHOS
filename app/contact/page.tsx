@@ -2,13 +2,26 @@ import type { Metadata } from 'next';
 import { Footer } from '@/components/layout/Footer';
 import { FadeUp } from '@/components/motion/Reveal';
 import { ContactForm } from '@/components/contact/ContactForm';
+import { SITE_URL, SITE_NAME, OG_IMAGE } from '@/lib/seo';
 
 // Per-request render so the nonce-based CSP (middleware.ts) can stamp its nonce.
 export const dynamic = 'force-dynamic';
 
+const description = 'Questions about your order or a piece? Write to SAHOS — we answer every note personally.';
+
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Questions about your order or a piece? Write to SAHOS — we answer every note personally.',
+  description,
+  alternates: { canonical: '/contact' },
+  openGraph: {
+    siteName: SITE_NAME,
+    type: 'website',
+    url: `${SITE_URL}/contact`,
+    title: 'Contact — SAHOS',
+    description,
+    images: [{ url: OG_IMAGE, alt: 'SAHOS — Contact' }],
+  },
+  twitter: { card: 'summary_large_image', title: 'Contact — SAHOS', description, images: [OG_IMAGE] },
 };
 
 // Contact us (customer service) — distinct from the marketing newsletter in the

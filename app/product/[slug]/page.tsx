@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getProduct, modelImages } from '@/lib/products';
+import { SITE_URL, SITE_NAME, OG_IMAGE } from '@/lib/seo';
 import { getModelImages } from '@/lib/gallery';
 import { fetchProductBySlug, fetchAllProducts } from '@/lib/catalog';
 import { Gallery } from '@/components/product/Gallery';
@@ -15,10 +16,33 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const product = (await fetchProductBySlug(params.slug)) ?? getProduct(params.slug);
-  if (!product) return { title: 'Not found' };
+  if (!product) return { title: 'Not found', robots: { index: false, follow: false } };
+
+  const title = `${product.name} — ${product.subtitle}`;
+  const canonical = `/product/${product.slug}`;
+  // Share the piece's own photo when it has a real (uploaded) image; otherwise
+  // fall back to the brand share image so the preview is never broken.
+  const photo = modelImages(product).find((i) => i.url?.startsWith('http'))?.url;
+  const image = photo ?? OG_IMAGE;
+
   return {
-    title: `${product.name} — ${product.subtitle}`,
+    title,
     description: product.description,
+    alternates: { canonical },
+    openGraph: {
+      siteName: SITE_NAME,
+      type: 'website',
+      url: `${SITE_URL}${canonical}`,
+      title: `${title} | SAHOS`,
+      description: product.description,
+      images: [{ url: image, alt: `${product.name} — ${product.subtitle}` }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | SAHOS`,
+      description: product.description,
+      images: [image],
+    },
   };
 }
 
