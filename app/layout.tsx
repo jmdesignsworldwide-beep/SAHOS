@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Jost, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
+import { SITE_URL, SITE_NAME, OG_IMAGE } from '@/lib/seo';
 
 // Fonts (spec §2): Jost carries 95% of the UI; Cormorant is the single couture
 // touch reserved for piece names / section titles. Loaded via next/font so
@@ -30,22 +31,47 @@ const cormorant = Cormorant_Garamond({
 // blocks — freezing the page. Small pages, so the dynamic cost is negligible.
 export const dynamic = 'force-dynamic';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sahos.vercel.app';
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'SAHOS — The Marilyn Collection',
+    default: 'SAHOS — The Marilyn Collection | Luxury Womenswear',
     template: '%s — SAHOS',
   },
-  description: 'Soft glamour, made to be seen. Five pieces — not a wardrobe, a confession.',
+  description:
+    'SAHOS — luxury womenswear. The Marilyn Collection: five satin evening pieces where Old Hollywood glamour meets vintage allure. Soft glamour, made to be seen.',
+  keywords: [
+    'SAHOS',
+    'luxury womenswear',
+    'luxury dresses',
+    'satin dress',
+    'evening dress',
+    'Old Hollywood glamour',
+    'corset dress',
+    'The Marilyn Collection',
+  ],
+  applicationName: SITE_NAME,
+  alternates: { canonical: '/' },
   openGraph: {
-    title: 'SAHOS — The Marilyn Collection',
-    description: 'Soft glamour, made to be seen.',
+    siteName: SITE_NAME,
+    title: 'SAHOS — The Marilyn Collection | Luxury Womenswear',
+    description:
+      'The Marilyn Collection — five satin evening pieces where Old Hollywood glamour meets vintage allure.',
     type: 'website',
-    url: siteUrl,
+    url: SITE_URL,
+    locale: 'en_US',
+    images: [{ url: OG_IMAGE, alt: 'SAHOS — The Marilyn Collection' }],
   },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SAHOS — The Marilyn Collection | Luxury Womenswear',
+    description: 'Luxury womenswear. Old Hollywood glamour meets vintage allure.',
+    images: [OG_IMAGE],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
 };
 
 export const viewport: Viewport = {

@@ -4,14 +4,27 @@ import { FadeUp, ClipReveal } from '@/components/motion/Reveal';
 import { SiteMedia } from '@/components/ui/SiteMedia';
 import { getSiteImageMap } from '@/lib/site-images.server';
 import { resolveSiteMedia } from '@/lib/site-images';
+import { SITE_URL, SITE_NAME, OG_IMAGE } from '@/lib/seo';
 
 // Reflect portal image edits without a redeploy.
 export const dynamic = 'force-dynamic';
 
+const description =
+  'The story behind SAHOS — a brand born from passion, craftsmanship, and a deep commitment to empowering women through slow fashion.';
+
 export const metadata: Metadata = {
   title: 'Our Story',
-  description:
-    'The story behind SAHOS — a brand born from passion, craftsmanship, and a deep commitment to empowering women through slow fashion.',
+  description,
+  alternates: { canonical: '/our-story' },
+  openGraph: {
+    siteName: SITE_NAME,
+    type: 'website',
+    url: `${SITE_URL}/our-story`,
+    title: 'Our Story — SAHOS',
+    description,
+    images: [{ url: OG_IMAGE, alt: 'SAHOS — Our Story' }],
+  },
+  twitter: { card: 'summary_large_image', title: 'Our Story — SAHOS', description, images: [OG_IMAGE] },
 };
 
 // Our Story (spec: brand narrative). Five airy sections in the house serif, no
