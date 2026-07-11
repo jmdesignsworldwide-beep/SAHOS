@@ -122,13 +122,27 @@ export async function POST(req: Request) {
     // an older cached client that only renders `error`, and for ANY Stripe error
     // type — not a hand-picked few. Once the store is configured these don't
     // occur, so real shoppers won't see them.
-    const err = e as { type?: string; code?: string; message?: string };
+    // StripeConnectionError wraps the underlying transport error at `.detail`;
+    // with the fetch client the real socket error is one level deeper at
+    // `.detail.cause`. Dig out that ROOT so the infrastructure cause
+    // (ETIMEDOUT / ENOTFOUND / ECONNRESET / a TLS/cert error) is surfaced —
+    // not just Stripe's generic "connection" wrapper — and echo it in the
+    // message so it's visible in the alert without spelunking Vercel logs.
+    const err = e as { type?: string; code?: string; message?: string; detail?: any };
+    const transport = err?.detail;
+    const rootCause = transport?.cause ?? transport;
+    const rootCode = rootCause?.code ?? transport?.code ?? err?.code;
     const isStripeError = typeof err?.type === 'string' && err.type.startsWith('Stripe');
-    const reason = isStripeError ? err.message || err.code : undefined;
+    const bits = [
+      err?.message,
+      rootCause?.message && rootCause.message !== err?.message ? rootCause.message : null,
+      rootCode ? `(${rootCode})` : null,
+    ].filter(Boolean);
+    const reason = isStripeError || rootCode ? bits.join(' ') : undefined;
     const error = reason ? `Could not start checkout: ${reason}` : 'Could not start checkout';
 
     return NextResponse.json(
-      { error, code: err?.code, type: err?.type, detail: reason },
+      { error, code: rootCode ?? err?.code, type: err?.type, detail: reason },
       { status: 502 }
     );
   }
