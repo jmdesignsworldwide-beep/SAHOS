@@ -113,23 +113,22 @@ export async function POST(req: Request) {
     // Always log the full error server-side (Vercel logs).
     console.error('[checkout] stripe error', e);
 
-    // Surface the ACTUAL reason for CONFIGURATION failures so an outage is
-    // diagnosable instead of opaque. A misconfigured or inactive live account,
-    // a bad/restricted key, or an invalid parameter all fail the whole store —
-    // the operator needs to see why. Stripe's auth/permission/invalid-request
-    // messages are safe to show (they carry no secrets). Card-level or unknown
-    // errors stay generic. These config errors don't occur in normal operation,
-    // so real customers won't see the detail once the store is set up correctly.
+    // Surface the ACTUAL reason. Every error that reaches here is a Checkout
+    // *creation* failure — a misconfigured/inactive live account, a bad or
+    // restricted key, or an invalid parameter. A customer's card is NEVER
+    // declined here (that happens later on Stripe's hosted page), so the Stripe
+    // message carries no sensitive data and is safe to show. We put the reason
+    // straight into `error` (not just a separate `detail`) so it appears even on
+    // an older cached client that only renders `error`, and for ANY Stripe error
+    // type — not a hand-picked few. Once the store is configured these don't
+    // occur, so real shoppers won't see them.
     const err = e as { type?: string; code?: string; message?: string };
-    const CONFIG_ERROR_TYPES = [
-      'StripeAuthenticationError', // bad / missing / revoked secret key
-      'StripePermissionError', // restricted key lacking Checkout permission
-      'StripeInvalidRequestError', // bad param, missing price, account not enabled
-    ];
-    const detail = err?.type && CONFIG_ERROR_TYPES.includes(err.type) ? err.message : undefined;
+    const isStripeError = typeof err?.type === 'string' && err.type.startsWith('Stripe');
+    const reason = isStripeError ? err.message || err.code : undefined;
+    const error = reason ? `Could not start checkout: ${reason}` : 'Could not start checkout';
 
     return NextResponse.json(
-      { error: 'Could not start checkout', code: err?.code, type: err?.type, detail },
+      { error, code: err?.code, type: err?.type, detail: reason },
       { status: 502 }
     );
   }
