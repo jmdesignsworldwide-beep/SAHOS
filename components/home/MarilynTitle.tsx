@@ -76,6 +76,8 @@ export function MarilynTitle({ media }: { media: ResolvedMedia }) {
         </div>
       </div>
       <div className="mtitle__scrim" aria-hidden />
+      <div className="mtitle__smoke" aria-hidden />
+      <div className="mtitle__spot" aria-hidden />
       <div className="mtitle__grain" aria-hidden />
       <div className="mtitle__vignette" aria-hidden />
 
