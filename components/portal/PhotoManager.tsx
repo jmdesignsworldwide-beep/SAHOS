@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { useRef, useState, useTransition, type DragEvent } from 'react';
+import { useEffect, useRef, useState, useTransition, type DragEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   createProductImageUpload,
@@ -10,6 +10,7 @@ import {
   reorderImagesAction,
 } from '@/app/portal/actions';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
+import { ImageCropper } from '@/components/portal/ImageCropper';
 import type { AdminImage } from '@/lib/admin';
 
 type PhotoType = 'model' | 'garment_360';
@@ -62,6 +63,17 @@ function Section({
   const [phase, setPhase] = useState<Phase>('idle');
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // A single picked photo held back for optional cropping before it uploads.
+  const [staged, setStaged] = useState<File | null>(null);
+  const [stagedPreview, setStagedPreview] = useState<string | null>(null);
+  const [cropping, setCropping] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (stagedPreview) URL.revokeObjectURL(stagedPreview);
+    };
+  }, [stagedPreview]);
 
   const ordered = [...images].sort((a, b) => a.position - b.position);
 
@@ -116,10 +128,59 @@ function Section({
     });
   };
 
+  // Hold a single picked photo for an optional crop step; upload several at once
+  // directly (batch drop keeps its old behavior — cropping is one at a time).
+  const pick = (files: FileList | File[]) => {
+    setError(null);
+    const list = Array.from(files);
+    if (list.length === 0) return;
+    if (list.length > 1) {
+      uploadFiles(list);
+      return;
+    }
+    const f = list[0];
+    const c = classify(f);
+    if ('error' in c) {
+      setError(c.error);
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+    if (stagedPreview) URL.revokeObjectURL(stagedPreview);
+    setStaged(f);
+    setStagedPreview(URL.createObjectURL(f));
+    setCropping(false);
+  };
+
+  const applyStagedCrop = (cropped: File) => {
+    if (stagedPreview) URL.revokeObjectURL(stagedPreview);
+    setStaged(cropped);
+    setStagedPreview(URL.createObjectURL(cropped));
+    setCropping(false);
+  };
+
+  const clearStaged = () => {
+    if (stagedPreview) URL.revokeObjectURL(stagedPreview);
+    setStaged(null);
+    setStagedPreview(null);
+    setCropping(false);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const uploadStaged = () => {
+    if (!staged) return;
+    const f = staged;
+    // Clear the staging UI immediately; uploadFiles drives its own busy state.
+    if (stagedPreview) URL.revokeObjectURL(stagedPreview);
+    setStaged(null);
+    setStagedPreview(null);
+    setCropping(false);
+    uploadFiles([f]);
+  };
+
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
+    if (e.dataTransfer.files?.length) pick(e.dataTransfer.files);
   };
 
   const remove = (id: string) => {
@@ -179,31 +240,57 @@ function Section({
         ))}
       </div>
 
-      {!full && (
-        <div
-          className={`pdrop ${dragOver ? 'is-over' : ''} ${pending ? 'is-busy' : ''}`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-          onClick={() => !pending && inputRef.current?.click()}
-          role="button"
-          tabIndex={0}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif"
-            multiple={type === 'model'}
-            hidden
-            disabled={pending}
-            onChange={(e) => e.target.files && e.target.files.length > 0 && uploadFiles(e.target.files)}
-          />
-          <p>{pending ? busyLabel : 'Arrastra fotos aquí o toca para elegir'}</p>
-          <span>JPG, PNG o WebP · máx 25MB</span>
+      {staged ? (
+        <div className="pstage">
+          <div className="pstage__preview">
+            {stagedPreview && <img src={stagedPreview} alt="Vista previa" />}
+          </div>
+          <div className="pstage__actions">
+            <button type="button" className="pbtn" onClick={() => setCropping(true)} disabled={pending}>
+              Recortar
+            </button>
+            <button type="button" className="pbtn pbtn--primary" onClick={uploadStaged} disabled={pending}>
+              {pending ? busyLabel : 'Subir foto'}
+            </button>
+            <button type="button" className="pbtn" onClick={clearStaged} disabled={pending}>
+              Cancelar
+            </button>
+          </div>
+          <span className="pstage__hint">
+            Opcional: recorta antes de subir (p. ej. cortar la parte de abajo). O súbela completa.
+          </span>
         </div>
+      ) : (
+        !full && (
+          <div
+            className={`pdrop ${dragOver ? 'is-over' : ''} ${pending ? 'is-busy' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            onClick={() => !pending && inputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif"
+              multiple={type === 'model'}
+              hidden
+              disabled={pending}
+              onChange={(e) => e.target.files && e.target.files.length > 0 && pick(e.target.files)}
+            />
+            <p>{pending ? busyLabel : 'Arrastra fotos aquí o toca para elegir'}</p>
+            <span>JPG, PNG o WebP · máx 25MB</span>
+          </div>
+        )
+      )}
+
+      {cropping && staged && (
+        <ImageCropper file={staged} onCancel={() => setCropping(false)} onApply={applyStagedCrop} />
       )}
 
       {error && <p className="pmsg pmsg--error">{error}</p>}

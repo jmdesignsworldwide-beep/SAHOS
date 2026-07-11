@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSiteImageUpload, saveSiteImageMeta } from '@/app/portal/actions';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
+import { ImageCropper } from '@/components/portal/ImageCropper';
 
 const BUCKET = 'product-images';
 const IMAGE_MAX = 25 * 1024 * 1024; // 25MB
@@ -135,6 +136,16 @@ function SlotCard({ item }: { item: SiteImageItem }) {
   const [alt, setAlt] = useState(item.alt);
   const [phase, setPhase] = useState<Phase>('idle');
   const [msg, setMsg] = useState<{ ok?: boolean; text: string } | null>(null);
+  const [cropping, setCropping] = useState(false);
+
+  // Replace the staged file with its cropped version (keeps the same upload flow).
+  const applyCrop = (cropped: File) => {
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(cropped);
+    setFileKind('image');
+    setPreview(URL.createObjectURL(cropped));
+    setCropping(false);
+  };
 
   useEffect(() => {
     return () => {
@@ -322,6 +333,11 @@ function SlotCard({ item }: { item: SiteImageItem }) {
           >
             {file ? 'Cambiar archivo' : 'Imagen o video'}
           </button>
+          {file && fileKind === 'image' && !pending && (
+            <button type="button" className="pbtn" onClick={() => setCropping(true)}>
+              Recortar
+            </button>
+          )}
           <button type="button" className="pbtn pbtn--primary" onClick={save} disabled={!canSave}>
             {btnLabel}
           </button>
@@ -331,6 +347,10 @@ function SlotCard({ item }: { item: SiteImageItem }) {
             </button>
           )}
         </div>
+
+        {cropping && file && (
+          <ImageCropper file={file} onCancel={() => setCropping(false)} onApply={applyCrop} />
+        )}
 
         {file && <span className="simg-card__file">{file.name}</span>}
         <span className="simg-card__hint">

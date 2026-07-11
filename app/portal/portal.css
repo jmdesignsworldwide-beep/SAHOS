@@ -1207,3 +1207,99 @@
     align-self: stretch;
   }
 }
+
+/* =========================================================================
+   Image crop tool (portal) — free-form crop modal + staging panel
+   ========================================================================= */
+
+/* Staged single photo held back for an optional crop before upload. */
+.pstage {
+  border: 1px solid #e7e5e1;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.pstage__preview {
+  display: flex;
+  justify-content: center;
+  background: #f6f5f3;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+.pstage__preview img {
+  max-height: 320px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.pstage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pstage__hint {
+  font-size: 0.8rem;
+  color: #9b978f;
+}
+
+/* Full-screen crop modal. */
+.cropper {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(20, 18, 16, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+}
+.cropper__panel {
+  background: #fff;
+  color: #1a1a18;
+  border-radius: 14px;
+  width: min(760px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+.cropper__head h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+.cropper__head p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #55524d;
+  line-height: 1.5;
+}
+.cropper__stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f6f5f3;
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+/* Constrain the image (and react-image-crop's wrapper/img) so the whole crop
+   area — including the bottom handle — always fits on screen. The compound
+   selectors beat the library's own `.ReactCrop__image` rule. */
+.cropper__img,
+.cropper__stage .ReactCrop,
+.cropper__stage .ReactCrop__image {
+  display: block;
+  max-height: 58vh;
+  width: auto;
+  max-width: 100%;
+}
+.cropper__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
