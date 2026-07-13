@@ -1312,3 +1312,161 @@
 .ocard--danger .ocard__title {
   color: #6b1f2a;
 }
+
+/* =========================================================================
+   PREMIUM DASHBOARD MODERNIZATION (visual only — no markup/logic changes)
+   Layered on top of the existing classes: consistent tokens, soft shadows,
+   rounded surfaces, polished buttons/inputs, clear status pills, smooth
+   hover/focus. Scoped under .portal so the storefront is never affected.
+   ========================================================================= */
+.portal {
+  --p-surface: #ffffff;
+  --p-border: #ecebe7;
+  --p-ink: #1b1a17;
+  --p-muted: #6b6760;
+  --p-wine: #6e2230;
+  --p-gold: #a9814b;
+  --p-radius: 14px;
+  --p-shadow: 0 1px 2px rgba(24, 20, 16, 0.04), 0 12px 30px -16px rgba(24, 20, 16, 0.18);
+  --p-shadow-hover: 0 2px 6px rgba(24, 20, 16, 0.06), 0 20px 44px -20px rgba(24, 20, 16, 0.26);
+  --p-ring: 0 0 0 3px rgba(110, 34, 48, 0.13);
+  background:
+    radial-gradient(130% 70% at 100% -5%, rgba(169, 129, 75, 0.06), transparent 55%),
+    #f4f2ef;
+}
+
+/* Header — clean, sticky, quietly premium. */
+.portal .phead {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(160%) blur(10px);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  border-bottom: 1px solid var(--p-border);
+}
+.portal .phead__nav a {
+  transition: color 0.18s ease;
+}
+.portal .phead__nav a:hover {
+  color: var(--p-ink);
+}
+
+/* Card surfaces — soft shadow, refined border + radius, consistent across the
+   dashboard, orders, images, inventory, product forms, login. */
+.portal .dcard,
+.portal .ucard,
+.portal .ocard,
+.portal .simg-card,
+.portal .pphotos,
+.portal .psizes,
+.portal .plogin__card,
+.portal .pstage,
+.portal .cropper__panel {
+  border-radius: var(--p-radius);
+  border: 1px solid var(--p-border);
+  box-shadow: var(--p-shadow);
+}
+
+/* List / table rows — sit on their own soft surface, lift a touch on hover. */
+.portal .plist__row {
+  border: 1px solid var(--p-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(24, 20, 16, 0.03);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.portal .plist__row:hover {
+  box-shadow: var(--p-shadow-hover);
+  transform: translateY(-1px);
+  border-color: #dedcd7;
+}
+.portal .rlist__row {
+  padding: 0.7rem 0.25rem;
+  border-radius: 10px;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.portal a.rlist__row:hover {
+  background: #faf9f7;
+  color: var(--p-ink);
+}
+.portal .orow {
+  border-radius: 10px;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+/* Buttons — modern, tactile, with a real focus ring and press feedback. */
+.portal .pbtn {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease,
+    transform 0.06s ease, color 0.18s ease;
+}
+.portal .pbtn:hover {
+  box-shadow: 0 6px 16px -12px rgba(24, 20, 16, 0.5);
+}
+.portal .pbtn:active {
+  transform: translateY(1px);
+}
+.portal .pbtn--primary {
+  box-shadow: 0 8px 18px -10px rgba(24, 20, 16, 0.55);
+}
+
+/* Accessible, on-brand focus ring for every interactive element. */
+.portal :focus-visible {
+  outline: 2px solid var(--p-wine);
+  outline-offset: 2px;
+}
+
+/* Inputs — soft focus ring in brand wine. */
+.portal .pfield input:focus,
+.portal .pfield textarea:focus,
+.portal .psize__stock:focus,
+.portal .icell__edit input:focus,
+.portal .osearch input:focus,
+.portal .simg-card__field input:focus {
+  outline: none;
+  border-color: var(--p-wine);
+  box-shadow: var(--p-ring);
+}
+
+/* Status pills — rounded, medium weight, clear colour semantics. */
+.portal .pbadge,
+.portal .tag {
+  border-radius: 999px;
+  font-weight: 600;
+}
+.portal .pbadge.is-on {
+  background: #e7f4ec;
+  color: #1f7a46;
+}
+.portal .pbadge.is-off {
+  background: #f1efec;
+  color: #8a867f;
+}
+.portal .tag--low {
+  background: #fbf3e2;
+  color: #8a6d1f;
+}
+.portal .tag--out {
+  background: #f7e9ea;
+  color: #6b1f2a;
+}
+
+/* Section titles — a hair more presence. */
+.portal .ptitle {
+  letter-spacing: -0.01em;
+}
+
+/* Order fulfilment steps — softer, tactile. */
+.portal .ostep {
+  border-radius: 10px;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+.portal .otab {
+  border-radius: 999px;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal .plist__row,
+  .portal .pbtn {
+    transition: none;
+  }
+}
