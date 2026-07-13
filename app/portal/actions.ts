@@ -238,6 +238,23 @@ export async function updateFulfillmentAction(formData: FormData): Promise<Actio
   return { ok: true };
 }
 
+// Permanently delete a single order (e.g. a Stripe test-mode order that pollutes
+// the list and the sales stats). Auth-gated and RLS-enforced (never service_role);
+// order_items cascade via the FK, and the dashboard totals recompute from the
+// orders table on the next load. Deletes exactly ONE order by id — no blanket
+// delete — so a real order is never removed by accident. Does NOT restore stock
+// (a test order's decrement is adjusted from Inventario if needed).
+export async function deleteOrderAction(formData: FormData) {
+  await requireUser();
+  const id = str(formData.get('order_id'), 64);
+  if (!id) return;
+  const supabase = createSSRClient();
+  await supabase.from('orders').delete().eq('id', id);
+  revalidatePath('/portal/pedidos');
+  revalidatePath('/portal/dashboard');
+  redirect('/portal/pedidos');
+}
+
 // --------------------------------------------------------------------------
 // Inventory (Tanda 3)
 // --------------------------------------------------------------------------
