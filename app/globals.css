@@ -1765,9 +1765,12 @@ select {
   padding: clamp(3.25rem, 6vw, 4.75rem) var(--edge);
   text-align: center;
   color: var(--cream);
+  /* The lower half fades from burgundy all the way down to the exact base
+     colour of "The Marilyn Collection" (#1c0f13) so the two sections read as one
+     continuous cinematic fade — no hard line where they meet. */
   background:
     radial-gradient(140% 130% at 50% -10%, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 45%),
-    linear-gradient(180deg, #6a1a2c 0%, var(--wine-deep) 52%, #470e19 100%);
+    linear-gradient(180deg, #6a1a2c 0%, var(--wine-deep) 38%, #3a0b14 68%, #1c0f13 100%);
 }
 /* barely-there central glow so the field isn't a solid slab */
 .brandbanner::after {
@@ -2128,13 +2131,16 @@ select {
   top: 0;
   left: 0;
   right: 0;
-  height: 24%;
+  height: 42%;
   z-index: 6;
   pointer-events: none;
+  /* Starts at the banner's exact bottom colour (#1c0f13) and eases out over a
+     long distance, so the scene emerges gradually with no seam. */
   background: linear-gradient(
     180deg,
-    #470e19 0%,
-    rgba(71, 14, 25, 0.55) 34%,
+    #1c0f13 0%,
+    rgba(28, 15, 19, 0.72) 26%,
+    rgba(28, 15, 19, 0.32) 55%,
     rgba(28, 15, 19, 0) 100%
   );
 }
