@@ -12,6 +12,7 @@ import {
 import { PortalHeader } from '@/components/portal/PortalHeader';
 import { OrderStatusControl } from '@/components/portal/OrderStatusControl';
 import { CopyAddressButton } from '@/components/portal/CopyAddressButton';
+import { DeleteOrderButton } from '@/components/portal/DeleteOrderButton';
 
 function shipping(o: any): { name?: string; line1?: string; line2?: string; city?: string; country?: string } {
   const s = o.shipping_json ?? {};
@@ -28,6 +29,7 @@ function shipping(o: any): { name?: string; line1?: string; line2?: string; city
 export default async function PedidoDetallePage({ params }: { params: { id: string } }) {
   const order = await adminGetOrder(params.id);
   if (!order) notFound();
+  const ref = (order.stripe_payment_intent ?? order.id).slice(-8).toUpperCase();
   const addr = shipping(order);
   const addressBlock = pirateShipAddress(order);
   const hasAddress = hasShippingAddress(order);
@@ -38,9 +40,7 @@ export default async function PedidoDetallePage({ params }: { params: { id: stri
       <PortalHeader />
       <main className="pwrap">
         <div className="ptoolbar">
-          <h1 className="ptitle">
-            Pedido #{(order.stripe_payment_intent ?? order.id).slice(-8).toUpperCase()}
-          </h1>
+          <h1 className="ptitle">Pedido #{ref}</h1>
           <Link href="/portal/pedidos" className="pbtn">
             ← Pedidos
           </Link>
@@ -150,6 +150,16 @@ export default async function PedidoDetallePage({ params }: { params: { id: stri
               </div>
             </section>
           </div>
+
+          <section className="ocard ocard--danger">
+            <h2 className="ocard__title">Eliminar pedido</h2>
+            <p className="ocard__note">
+              Borra este pedido de forma permanente (base de datos y estadísticas). Úsalo solo para
+              pedidos de <strong>prueba</strong> (por ejemplo los creados con tarjetas de test de
+              Stripe). No restaura el inventario — ajústalo en Inventario si hace falta.
+            </p>
+            <DeleteOrderButton id={order.id} label={ref} />
+          </section>
         </div>
       </main>
     </>

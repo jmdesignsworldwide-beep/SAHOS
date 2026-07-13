@@ -1303,3 +1303,12 @@
   justify-content: flex-end;
   gap: 0.6rem;
 }
+
+/* Danger card — the "delete test order" zone on the order detail page. */
+.ocard--danger {
+  border: 1px solid #e3cfd2;
+  background: #fcf7f7;
+}
+.ocard--danger .ocard__title {
+  color: #6b1f2a;
+}
