@@ -1218,6 +1218,7 @@ a {
   min-width: 52px;
   padding: 0.65rem 0.5rem;
   border: 1px solid #ecebe8;
+  border-radius: 10px; /* soft rounded corners (not square, not a pill) */
   background: #fff;
   cursor: pointer;
   font-size: 0.8rem;

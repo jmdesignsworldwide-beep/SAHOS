@@ -125,7 +125,6 @@ export function BuyPanel({ product }: { product: Product }) {
         </div>
 
         <div className="buy__reassurance">
-          <span>Complimentary shipping</span>
           <span>Delivered on a velvet hanger</span>
         </div>
 
