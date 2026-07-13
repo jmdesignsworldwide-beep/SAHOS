@@ -7,7 +7,7 @@
 
 insert into products (slug, name, subtitle, description, color, factory_ref, price_cents, position)
 values
-  ('lola',    'Lola',    'Satin Cross Back Dress',   'A satin mini with a crossed open back and a clean, low-cut front.', 'Gold',  'TD25091007', null, 1),
+  ('lola',    'Lola',    'Satin Cross Back Dress',   'A satin mini with a crossed open back and a clean, low-cut front.', 'Cream',  'TD25091007', null, 1),
   ('kateryn', 'Kathyrn', 'Flowy Two Piece Set',      'A flowing two-piece set — V-neck collared top over a straight-flow trouser.', 'Yellow', 'TD25091008', null, 2),
   ('amber',   'Amber',   'Wine Corset Dress',        'A wine corset mini with a low V front and adjustable back ties.', 'Wine',  'TD25091006', null, 3),
   ('daisy',   'Daisy',   'Satin White T-Shirt Dress','A satin t-shirt silhouette in pure white — collared and button-up.', 'White', 'TD25091010', null, 4),

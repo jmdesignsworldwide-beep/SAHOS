@@ -75,7 +75,7 @@ All motion respects `prefers-reduced-motion` and runs on `transform`/`opacity`.
 
 | # | Slug | Name | Piece | Color | Ref |
 |---|------|------|-------|-------|-----|
-| 01 | `lola` | Lola | Satin Cross Back Dress | Gold | TD25091007 |
+| 01 | `lola` | Lola | Satin Cross Back Dress | Cream | TD25091007 |
 | 02 | `kateryn` | Kateryn | Flowy Two Piece Set | Yellow | TD25091008 |
 | 03 | `amber` | Amber | Wine Corset Dress | Wine | TD25091006 |
 | 04 | `daisy` | Daisy | Satin White T-Shirt Dress | White | TD25091010 |
