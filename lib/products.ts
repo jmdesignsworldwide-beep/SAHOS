@@ -43,7 +43,7 @@ export const PRODUCTS: Product[] = [
       'Satin',
     ],
     composition: 'satin',
-    color: 'Gold',
+    color: 'Cream',
     factoryRef: 'TD25091007',
     priceCents: null,
     currency: 'usd',
