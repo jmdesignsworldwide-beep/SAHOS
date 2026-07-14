@@ -10,6 +10,7 @@ import { MagneticCursor } from '@/components/motion/MagneticCursor';
 import { AnchorScroll } from '@/components/motion/AnchorScroll';
 import { Nav } from '@/components/layout/Nav';
 import { BagDrawer } from '@/components/bag/BagDrawer';
+import { VisitTracker } from '@/components/analytics/VisitTracker';
 
 // Composes every global client concern for the public STORE:
 // smooth scroll → bag state → cursor + nav + drawer + page-transition wrapper.
@@ -29,6 +30,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SharedTransitionProvider>
           <MagneticCursor />
           <AnchorScroll />
+          {/* Privacy-first visit tracking — public store only, never the portal. */}
+          <VisitTracker />
           <Nav />
           <BagDrawer />
           <PageTransition>{children}</PageTransition>

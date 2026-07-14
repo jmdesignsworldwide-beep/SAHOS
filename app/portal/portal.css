@@ -1470,3 +1470,313 @@
     transition: none;
   }
 }
+
+/* =========================================================================
+   LOCATION ANALYTICS (/portal/analytics) — premium, on-brand, responsive.
+   Reuses the modernization tokens above. Scoped under .portal.
+   ========================================================================= */
+.portal .an__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.portal .an__sub {
+  margin: 0.35rem 0 0;
+  color: var(--p-muted);
+  font-size: 0.9rem;
+  max-width: 46ch;
+}
+.portal .an__ranges {
+  display: inline-flex;
+  padding: 4px;
+  gap: 2px;
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 999px;
+  box-shadow: var(--p-shadow);
+}
+.portal .an__range {
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--p-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.portal .an__range:hover {
+  color: var(--p-ink);
+}
+.portal .an__range.is-active {
+  background: var(--p-wine);
+  color: #fff;
+}
+
+.portal .an__empty {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--p-muted);
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow);
+}
+
+/* Stat cards */
+.portal .an__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.portal .an__stat {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow);
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.portal .an__stat-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-muted);
+}
+.portal .an__stat-num {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 2rem;
+  line-height: 1.05;
+  color: var(--p-ink);
+  overflow-wrap: anywhere;
+}
+.portal .an__stat-num--sm {
+  font-size: 1.25rem;
+  font-family: inherit;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.portal .an__stat-foot {
+  font-size: 0.78rem;
+  color: var(--p-wine);
+}
+.portal .an__flag {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+/* Cards */
+.portal .an__card {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow);
+  padding: 1.25rem 1.35rem 1.4rem;
+  margin-bottom: 1.25rem;
+}
+.portal .an__card-title {
+  margin: 0 0 1rem;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.35rem;
+  color: var(--p-ink);
+}
+.portal .an__card--map {
+  overflow: hidden;
+}
+
+/* Map */
+.portal .vmap {
+  width: 100%;
+}
+.portal .vmap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.portal .vmap__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--p-border);
+}
+.portal .vmap__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal .vmap__legend-bar {
+  width: 120px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f3e9da, #d8bf8c, #c08a5a, #8a3333, #6b1f2a);
+  border: 1px solid var(--p-border);
+}
+.portal .vmap__legend-label {
+  font-size: 0.72rem;
+  color: var(--p-muted);
+}
+.portal .vmap__hover {
+  font-size: 0.9rem;
+  color: var(--p-ink);
+}
+.portal .vmap__hover strong {
+  font-weight: 600;
+}
+.portal .vmap__hover span {
+  color: var(--p-muted);
+}
+.portal .vmap__hint {
+  color: var(--p-muted);
+  font-style: italic;
+}
+
+/* Two-column ranking grid */
+.portal .an__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.portal .an__grid > .an__card {
+  margin-bottom: 0;
+}
+
+/* Top-locations ranking */
+.portal .an__rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.portal .an__rank-row {
+  display: grid;
+  grid-template-columns: 1.6rem 1.4rem 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.4rem;
+  border-bottom: 1px solid var(--p-border);
+}
+.portal .an__rank-row:last-child {
+  border-bottom: none;
+}
+.portal .an__rank-i {
+  font-size: 0.8rem;
+  color: var(--p-muted);
+  text-align: center;
+}
+.portal .an__rank-flag {
+  font-size: 1.15rem;
+  line-height: 1;
+  text-align: center;
+}
+.portal .an__rank-place {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.portal .an__rank-place strong {
+  font-weight: 500;
+  color: var(--p-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.portal .an__rank-country {
+  font-size: 0.75rem;
+  color: var(--p-muted);
+}
+.portal .an__rank-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--p-wine);
+}
+
+/* Per-country bars */
+.portal .an__countries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.portal .an__country {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+}
+.portal .an__country-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  color: var(--p-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.portal .an__bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #efeae1;
+  overflow: hidden;
+}
+.portal .an__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--p-gold), var(--p-wine));
+}
+.portal .an__country-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--p-muted);
+}
+
+.portal .an__privacy {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--p-muted);
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .portal .an__stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .portal .an__grid {
+    grid-template-columns: 1fr;
+  }
+  .portal .an__grid > .an__card {
+    margin-bottom: 0;
+  }
+}
+@media (max-width: 560px) {
+  .portal .an__head {
+    align-items: stretch;
+  }
+  .portal .an__ranges {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .portal .an__stats {
+    grid-template-columns: 1fr;
+  }
+  .portal .an__country {
+    grid-template-columns: minmax(5.5rem, 7rem) 1fr auto;
+  }
+}
