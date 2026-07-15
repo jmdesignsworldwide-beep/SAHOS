@@ -1,0 +1,9 @@
+# Supabase CLI config. Used by the migrations pipeline (.github/workflows/
+# supabase-migrations.yml). In CI the project is selected via the
+# SUPABASE_PROJECT_REF secret at `supabase link` time, so `project_id` here is
+# only a local-dev label.
+project_id = "sahos"
+
+[db]
+# Must match the Postgres major version of the linked Supabase project.
+major_version = 15
