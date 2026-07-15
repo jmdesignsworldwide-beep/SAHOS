@@ -104,5 +104,5 @@ export async function middleware(request: NextRequest) {
 export const config = {
   // Documents only. Skip static assets, the image optimizer, API routes and
   // public product files so they keep their own headers and stay cacheable.
-  matcher: ['/((?!_next/static|_next/image|api/|favicon.ico|robots.txt|sitemap.xml|products/).*)'],
+  matcher: ['/((?!_next/static|_next/image|api/|favicon.ico|robots.txt|sitemap.xml|products/|maps/).*)'],
 };
