@@ -52,7 +52,7 @@ All motion respects `prefers-reduced-motion` and runs on `transform`/`opacity`.
 - `app/api/checkout` — re-prices the bag **server-side** against the DB, then creates a Stripe Checkout Session (Apple/Google Pay included).
 - `app/api/webhooks/stripe` — **signature-verified**; order state changes happen only here.
 - `app/api/newsletter` — validated + rate-limited sign-up.
-- `app/api/track` + `components/analytics/VisitTracker.tsx` — privacy-first visit tracking. Derives **approximate** location (country/region/city) from Vercel's edge geo headers and stores it in `page_visits` via `service_role`. **Never stores the IP** (used transiently only to rate-limit) or any personal data. Public store only — the portal is never tracked. See `supabase/analytics.sql`.
+- `app/api/track` + `components/analytics/VisitTracker.tsx` — privacy-first visit tracking. Derives **approximate** location (country/region/city) from Vercel's edge geo headers and stores it in `page_visits` via `service_role`. **Never stores the IP** (used transiently only to rate-limit) or any personal data. Public store only — the portal is never tracked. Table defined in `supabase/migrations/20260715000000_analytics.sql`.
 - `app/portal/analytics` — admin-only location dashboard: world map (react-simple-maps, topojson served from `public/maps`), stat cards, top-location ranking, per-country bars, visits-over-time, date-range filter. Reads via the RLS-authenticated client.
 
 ## Security (spec §8)
@@ -66,8 +66,8 @@ All motion respects `prefers-reduced-motion` and runs on `transform`/`opacity`.
 
 ### Pre-launch security checklist
 - [ ] Set real prices (`price_cents`) — replace every `TODO_PRECIO`.
-- [ ] Run `supabase/schema.sql` then `supabase/seed.sql`.
-- [ ] Run `supabase/analytics.sql` (creates `page_visits` for the location dashboard; RLS enabled + forced, admin-read only).
+- [ ] Run `supabase/schema.sql` then `supabase/seed.sql` (baseline; applied once by hand).
+- [ ] Enable **automatic migrations**: add the `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` and `SUPABASE_PROJECT_REF` repo secrets (see `supabase/migrations/README.md`). After that, any file in `supabase/migrations/` auto-applies on merge to `main` — no manual SQL. The location-analytics table ships as the first migration.
 - [ ] Run the **Supabase Security Advisor** linter and clear all warnings.
 - [ ] Configure Stripe webhook endpoint → `/api/webhooks/stripe`, set `STRIPE_WEBHOOK_SECRET`.
 - [ ] `npm audit` clean.
