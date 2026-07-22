@@ -145,8 +145,9 @@ export function BuyPanel({ product }: { product: Product }) {
             </ul>
           </Accordion.Item>
           <Accordion.Item title="Shipping &amp; Returns">
-            Complimentary insured shipping within the United States. Each piece is dispatched on a
-            velvet hanger inside SAHOS packaging. Returns accepted within 14 days, unworn with tags.
+            Insured flat-rate shipping within the United States, calculated at checkout. Each piece is
+            dispatched on a velvet hanger inside SAHOS packaging. Returns accepted within 14 days,
+            unworn with tags.
           </Accordion.Item>
         </Accordion>
       </div>
