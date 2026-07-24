@@ -39,5 +39,9 @@
     "@stripe/react-stripe-js": "^2.7.3",
     "@stripe/stripe-js": "^4.1.0",
     "stripe": "^16.6.0"
+  },
+  "overrides": {
+    "d3-color": "^3.1.0",
+    "brace-expansion": "^2.0.2"
   }
 }
