@@ -6,6 +6,7 @@ import { getModelImages } from '@/lib/gallery';
 import { fetchProductBySlug, fetchAllProducts } from '@/lib/catalog';
 import { Gallery } from '@/components/product/Gallery';
 import { BuyPanel } from '@/components/product/BuyPanel';
+import { ProductViewTracker } from '@/components/analytics/ProductViewTracker';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Footer } from '@/components/layout/Footer';
 import { FadeUp } from '@/components/motion/Reveal';
@@ -68,6 +69,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <>
+      <ProductViewTracker slug={product.slug} />
       <div className="product">
         {/* LV/Gucci layout: model gallery (hero) + sticky buy panel */}
         <div className="product__main">

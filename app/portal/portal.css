@@ -1780,3 +1780,146 @@
     grid-template-columns: minmax(5.5rem, 7rem) 1fr auto;
   }
 }
+
+/* =========================================================================
+   ANALYTICS SUITE (/portal/analytics) — behavior, funnel, carts, per-piece.
+   Builds on the location-analytics classes above; scoped under .portal.
+   ========================================================================= */
+.portal .chart__line { stroke: var(--p-gold, #a9814b); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.portal .chart__legend { font-size: 0.72rem; color: #8a867f; margin-left: 0.75rem; }
+.portal .chart__legend--gold { color: var(--p-gold, #a9814b); }
+.portal .chart__head { gap: 0.5rem; align-items: center; }
+
+/* KPI row */
+.portal .kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.portal .kpi {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow);
+  padding: 1.05rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+}
+.portal .kpi--accent {
+  background: linear-gradient(160deg, #fbf4ef, #f7ece4);
+  border-color: #ead9c9;
+}
+.portal .kpi__label { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--p-muted); }
+.portal .kpi__num { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.95rem; line-height: 1.05; color: var(--p-ink); font-variant-numeric: tabular-nums; }
+.portal .kpi__foot { font-size: 0.74rem; color: var(--p-wine); }
+.portal .kpi__delta { font-size: 0.74rem; font-variant-numeric: tabular-nums; }
+.portal .kpi__delta--up { color: #2f7a3f; }
+.portal .kpi__delta--down { color: #b23a48; }
+.portal .kpi__delta--flat { color: #a5a29c; }
+
+/* Grid: 62% / 38% split that stacks on tablet */
+.portal .an__grid--62 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+.portal .an__grid--62 > * { margin-bottom: 0; min-width: 0; }
+.portal .an__stack { display: flex; flex-direction: column; gap: 1.25rem; }
+.portal .an__card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.portal .an__card-head .an__card-title { margin: 0; }
+.portal .an__muted { color: var(--p-muted); font-size: 0.9rem; }
+.portal .an__count-badge { font-size: 0.75rem; background: #f3e3d6; color: var(--p-wine); border-radius: 999px; padding: 0.1rem 0.5rem; vertical-align: middle; margin-left: 0.35rem; }
+
+/* Piece filter chips */
+.portal .an__pieces { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.portal .an__chip {
+  font-size: 0.76rem; padding: 0.3rem 0.7rem; border-radius: 999px;
+  border: 1px solid var(--p-border); color: var(--p-muted); text-decoration: none; background: #fff;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.portal .an__chip:hover { color: var(--p-ink); border-color: #d8d3ca; }
+.portal .an__chip.is-active { background: var(--p-wine); color: #fff; border-color: var(--p-wine); }
+
+/* Funnel — the centerpiece. Labels above each bar (always legible). */
+.portal .funnel { display: flex; flex-direction: column; gap: 0.15rem; }
+.portal .funnel__step { padding: 0.1rem 0; }
+.portal .funnel__drop { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0 0.4rem 0.2rem; }
+.portal .funnel__droparrow { color: #c9c3ba; font-size: 0.85rem; }
+.portal .funnel__droppct { font-size: 0.72rem; color: var(--p-muted); }
+.portal .funnel__droppct.is-weak { color: #b23a48; font-weight: 500; }
+.portal .funnel__row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.3rem; }
+.portal .funnel__label { font-size: 0.9rem; color: var(--p-ink); font-weight: 500; }
+.portal .funnel__count { font-size: 0.88rem; color: var(--p-ink); font-variant-numeric: tabular-nums; }
+.portal .funnel__of { color: var(--p-muted); font-size: 0.8rem; }
+.portal .funnel__bar { position: relative; height: 16px; border-radius: 999px; background: #f1ece4; overflow: hidden; }
+.portal .funnel__fill {
+  position: absolute; inset: 0 auto 0 0; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #8a3a3f, var(--p-wine));
+  transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.portal .funnel__fill[data-step="0"] { background: linear-gradient(90deg, #d8bf8c, #caa96f); }
+.portal .funnel__fill[data-step="1"] { background: linear-gradient(90deg, #caa96f, #b07a4e); }
+
+/* Per-piece performance table */
+.portal .ptable__scroll { overflow-x: auto; }
+.portal .ptable { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 520px; }
+.portal .ptable th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-muted); font-weight: 500; padding: 0 0.6rem 0.6rem; border-bottom: 1px solid var(--p-border); }
+.portal .ptable th.num, .portal .ptable td.num { text-align: right; }
+.portal .ptable td { padding: 0.7rem 0.6rem; border-bottom: 1px solid #f1efeb; vertical-align: middle; font-variant-numeric: tabular-nums; }
+.portal .ptable tr:last-child td { border-bottom: none; }
+.portal .ptable td.strong { font-weight: 600; color: var(--p-ink); }
+.portal .ptable__piece { display: flex; align-items: center; gap: 0.6rem; }
+.portal .ptable__thumb { width: 34px; height: 44px; border-radius: 5px; overflow: hidden; background: #efedea; display: flex; align-items: center; justify-content: center; color: #b9b5ae; flex: none; }
+.portal .ptable__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.portal .ptable__name { color: var(--p-ink); text-decoration: none; font-weight: 500; }
+.portal .ptable__name:hover { color: var(--p-wine); }
+.portal .convpill { display: inline-block; padding: 0.12rem 0.5rem; border-radius: 999px; font-size: 0.78rem; }
+.portal .convpill.is-good { background: #e5f1e7; color: #2f7a3f; }
+.portal .convpill.is-mid { background: #f6efe1; color: #9a7b33; }
+.portal .convpill.is-zero { background: #f1efeb; color: #a5a29c; }
+
+/* Abandoned carts */
+.portal .acart { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.portal .acart__row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid #f1efeb; flex-wrap: wrap; }
+.portal .acart__row:last-child { border-bottom: none; }
+.portal .acart__items { display: flex; flex-wrap: wrap; gap: 0.35rem; min-width: 0; }
+.portal .acart__item { font-size: 0.82rem; color: var(--p-ink); background: #f6f3ee; border-radius: 6px; padding: 0.15rem 0.5rem; }
+.portal .acart__more { font-size: 0.78rem; color: var(--p-muted); align-self: center; }
+.portal .acart__meta { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
+.portal .acart__value { font-weight: 600; color: var(--p-wine); font-variant-numeric: tabular-nums; }
+.portal .acart__step { font-size: 0.7rem; padding: 0.1rem 0.45rem; border-radius: 999px; }
+.portal .acart__step--checkout_started { background: #f7e6d8; color: #a05a2a; }
+.portal .acart__step--add, .portal .acart__step--add_to_cart { background: #eee9f0; color: #6a4a72; }
+.portal .acart__when { font-size: 0.72rem; color: #a5a29c; }
+
+/* Source / device bars */
+.portal .srcbars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.portal .srcbars__row { display: grid; grid-template-columns: minmax(4.5rem, 6rem) 1fr auto; align-items: center; gap: 0.7rem; }
+.portal .srcbars__label { font-size: 0.84rem; color: var(--p-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portal .srcbars__track { height: 8px; border-radius: 999px; background: #efeae1; overflow: hidden; }
+.portal .srcbars__fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--p-gold), var(--p-wine)); }
+.portal .srcbars__val { font-size: 0.82rem; color: var(--p-muted); font-variant-numeric: tabular-nums; }
+.portal .srcbars__pct { color: #b6b1a9; }
+
+/* Dashboard analytics widgets */
+.portal .dash__analytics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.portal .acard {
+  background: var(--p-surface); border: 1px solid var(--p-border); border-radius: var(--p-radius);
+  box-shadow: var(--p-shadow); padding: 1.05rem 1.2rem; display: flex; flex-direction: column; gap: 0.28rem;
+  text-decoration: none; transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.portal .acard:hover { box-shadow: var(--p-shadow-hover); transform: translateY(-1px); }
+.portal .acard__label { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--p-muted); }
+.portal .acard__num { font-family: var(--font-cormorant), Georgia, serif; font-size: 2rem; line-height: 1; color: var(--p-ink); font-variant-numeric: tabular-nums; }
+.portal .acard__num--warn { color: var(--p-wine); }
+.portal .acard__cta { font-size: 0.76rem; color: var(--p-wine); }
+
+/* Responsive */
+@media (max-width: 1000px) {
+  .portal .kpis { grid-template-columns: repeat(3, 1fr); }
+  .portal .an__grid--62 { grid-template-columns: 1fr; }
+  .portal .dash__analytics { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .portal .kpis { grid-template-columns: 1fr 1fr; }
+  .portal .acart__meta { margin-left: 0; }
+}

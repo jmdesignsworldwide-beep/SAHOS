@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useBag } from '@/components/providers/BagProvider';
 import { formatPrice } from '@/lib/format';
+import { track } from '@/lib/track';
 import { MagneticButton } from '@/components/ui/MagneticButton';
 
 // Slide-in bag drawer (spec §4.4). Framer Motion for the panel + scrim.
@@ -15,6 +16,12 @@ export function BagDrawer() {
   const { items, isOpen, close, remove, setQty, subtotalCents } = useBag();
 
   const checkout = async () => {
+    // Funnel: mark that this session reached checkout, with the cart snapshot.
+    track({
+      t: 'checkout_started',
+      value: subtotalCents ?? 0,
+      items: items.map((i) => ({ slug: i.slug, size: i.size, qty: i.qty, value_cents: i.priceCents ?? null })),
+    });
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',

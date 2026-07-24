@@ -7,6 +7,7 @@ import { formatPrice } from '@/lib/format';
 import { swatchFor } from '@/lib/colors';
 import { modelImages } from '@/lib/products';
 import { useBag } from '@/components/providers/BagProvider';
+import { track } from '@/lib/track';
 import { useSharedTransition } from '@/components/providers/SharedTransition';
 import { MagneticButton } from '@/components/ui/MagneticButton';
 import { Accordion } from '@/components/product/Accordion';
@@ -105,6 +106,8 @@ export function BuyPanel({ product }: { product: Product }) {
                 onClick={() => {
                   setSize(s.size);
                   setError(false);
+                  // Demand signal: which sizes get chosen, even without a purchase.
+                  track({ t: 'size_select', slug: product.slug, size: s.size });
                 }}
               >
                 {s.size}

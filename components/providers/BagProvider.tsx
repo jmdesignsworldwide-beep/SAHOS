@@ -2,6 +2,23 @@
 
 import { createContext, useContext, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react';
 import type { BagItem, Size } from '@/lib/types';
+import { track } from '@/lib/track';
+import type { EventType } from '@/lib/track-events';
+
+// Emit a cart event with a full snapshot of the resulting bag. Fire-and-forget;
+// never blocks the UI. Called only from explicit user actions (add/remove/qty),
+// so hydrating the saved bag from storage never looks like a new add.
+function emitCart(
+  type: Extract<EventType, 'add_to_cart' | 'remove_from_cart'>,
+  items: BagItem[],
+  focusSlug: string
+) {
+  const lines = items.map((i) => ({ slug: i.slug, size: i.size, qty: i.qty, value_cents: i.priceCents ?? null }));
+  const value = lines.reduce((s, l) => s + (l.value_cents ?? 0) * l.qty, 0);
+  // `slug` attributes the event to the specific piece (per-piece add-to-cart
+  // counts); `items` carries the full resulting bag (cart value + snapshot).
+  track({ t: type, slug: focusSlug, value, items: lines });
+}
 
 // Client-side bag state. Persisted to localStorage for continuity, but note:
 // prices here are display-only — the server ALWAYS recomputes authoritative
@@ -108,9 +125,22 @@ export function BagProvider({ children }: { children: ReactNode }) {
       add: (item) => {
         dispatch({ type: 'add', item });
         setOpen(true);
+        // Deterministic next-snapshot (mirrors the reducer) so the event carries
+        // the full resulting bag without waiting for the state commit.
+        const idx = state.items.findIndex((i) => i.slug === item.slug && i.size === item.size);
+        const next = idx >= 0 ? state.items.map((i, k) => (k === idx ? { ...i, qty: i.qty + item.qty } : i)) : [...state.items, item];
+        emitCart('add_to_cart', next, item.slug);
       },
-      remove: (slug, size) => dispatch({ type: 'remove', slug, size }),
-      setQty: (slug, size, qty) => dispatch({ type: 'qty', slug, size, qty }),
+      remove: (slug, size) => {
+        dispatch({ type: 'remove', slug, size });
+        emitCart('remove_from_cart', state.items.filter((i) => !(i.slug === slug && i.size === size)), slug);
+      },
+      setQty: (slug, size, qty) => {
+        dispatch({ type: 'qty', slug, size, qty });
+        const prev = state.items.find((i) => i.slug === slug && i.size === size)?.qty ?? 0;
+        const next = state.items.map((i) => (i.slug === slug && i.size === size ? { ...i, qty: Math.max(1, qty) } : i)).filter((i) => i.qty > 0);
+        emitCart(qty > prev ? 'add_to_cart' : 'remove_from_cart', next, slug);
+      },
       clear: () => dispatch({ type: 'clear' }),
     };
   }, [state.items, isOpen]);
