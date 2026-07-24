@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import { adminDashboard } from '@/lib/dashboard';
+import { adminAnalyticsWidgets } from '@/lib/insights';
 import { formatPrice } from '@/lib/format';
 import { FULFILLMENT_LABEL } from '@/lib/orderStatus';
 import { PortalHeader } from '@/components/portal/PortalHeader';
@@ -14,7 +15,7 @@ function pct(month: number, prev: number): { text: string; dir: 'up' | 'down' | 
 }
 
 export default async function DashboardPage() {
-  const d = await adminDashboard();
+  const [d, w] = await Promise.all([adminDashboard(), adminAnalyticsWidgets()]);
   const change = pct(d.salesMonthCents, d.salesPrevMonthCents);
   const monthName = new Date().toLocaleDateString('es-DO', { month: 'long' });
 
@@ -83,6 +84,25 @@ export default async function DashboardPage() {
             <span className="mcard__num">{d.unitsSoldMonth}</span>
             <span className="mcard__sub">este mes</span>
           </div>
+        </div>
+
+        {/* Analytics de hoy — enlaces directos al módulo */}
+        <div className="dash__analytics">
+          <Link href="/portal/analytics?range=today" className="acard">
+            <span className="acard__label">Visitantes hoy</span>
+            <span className="acard__num">{w.visitorsToday.toLocaleString('es-DO')}</span>
+            <span className="acard__cta">Ver analytics →</span>
+          </Link>
+          <Link href="/portal/analytics?range=today" className="acard">
+            <span className="acard__label">Conversión hoy</span>
+            <span className="acard__num">{w.conversionToday}%</span>
+            <span className="acard__cta">visitas → compras</span>
+          </Link>
+          <Link href="/portal/analytics?range=today" className="acard">
+            <span className="acard__label">Carritos abandonados hoy</span>
+            <span className={`acard__num ${w.abandonedToday > 0 ? 'acard__num--warn' : ''}`}>{w.abandonedToday}</span>
+            <span className="acard__cta">Recuperar ventas →</span>
+          </Link>
         </div>
 
         {/* Gráfica + top piezas */}

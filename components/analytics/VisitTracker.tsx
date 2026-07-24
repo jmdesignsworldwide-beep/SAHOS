@@ -2,13 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { trackPageView } from '@/lib/track';
 
-// Fires one lightweight, non-blocking ping to /api/track per public page view.
-// It runs AFTER paint (useEffect) and uses fetch(keepalive) so it never delays
-// rendering or navigation. Geography is derived server-side from Vercel's edge
-// headers — nothing about the visitor is read or sent from the browser beyond
-// the path they're on. The portal is never tracked (this only mounts on the
-// public store, and the endpoint rejects /portal paths too).
+// Emits one page_view per public page view (with first-touch referrer + UTM on
+// entry). Runs AFTER paint via useEffect and fire-and-forget, so it never
+// delays rendering, navigation, or the store's smooth-scroll / GSAP motion.
+// Mounted only in AppShell's public branch, and the endpoint rejects /portal
+// paths too — the admin portal is never tracked.
 export function VisitTracker() {
   const pathname = usePathname();
   const last = useRef<string | null>(null);
@@ -16,24 +16,9 @@ export function VisitTracker() {
   useEffect(() => {
     if (!pathname) return;
     if (pathname === '/portal' || pathname.startsWith('/portal/')) return;
-    // Guard against double-firing for the same path (e.g. re-renders).
-    if (last.current === pathname) return;
+    if (last.current === pathname) return; // guard re-renders
     last.current = pathname;
-
-    const body = JSON.stringify({ path: pathname });
-    try {
-      fetch('/api/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-        keepalive: true,
-        cache: 'no-store',
-      }).catch(() => {
-        /* analytics is best-effort; never surface an error to the visitor */
-      });
-    } catch {
-      /* ignore */
-    }
+    trackPageView(pathname);
   }, [pathname]);
 
   return null;

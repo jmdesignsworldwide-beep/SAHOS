@@ -64,5 +64,40 @@ export async function syncOrderFromSession(session: any): Promise<SyncResult> {
   });
   if (rpcErr) return { ok: false, orderId: order.id, reason: `items write failed: ${rpcErr.message}` };
 
+  // Analytics: close the funnel. Attribute this purchase to the anonymous
+  // session (if present) — mark its cart converted and record ONE purchase
+  // event. Fully idempotent (guarded on converted_order_id), best-effort, and
+  // never blocks or fails the order.
+  await recordPurchaseAnalytics(supabase, session, order.id);
+
   return { ok: true, orderId: order.id };
+}
+
+async function recordPurchaseAnalytics(supabase: any, session: any, orderId: string): Promise<void> {
+  try {
+    const sid = session.metadata?.analytics_session;
+    if (!sid) return;
+
+    // Idempotency: if this order's purchase is already recorded, do nothing.
+    const { data: existing } = await supabase
+      .from('carts')
+      .select('session_id,state,converted_order_id')
+      .eq('session_id', sid)
+      .maybeSingle();
+    if (existing?.converted_order_id === orderId) return;
+
+    await supabase
+      .from('carts')
+      .update({ state: 'converted', converted_order_id: orderId, updated_at: new Date().toISOString() })
+      .eq('session_id', sid);
+
+    await supabase.from('analytics_events').insert({
+      session_id: sid,
+      event_type: 'purchase',
+      value_cents: session.amount_total ?? 0,
+      metadata: { order_id: orderId },
+    });
+  } catch {
+    /* analytics is best-effort — an order must never fail because of it */
+  }
 }

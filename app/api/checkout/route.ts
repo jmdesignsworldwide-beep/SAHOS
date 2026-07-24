@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { parseBag } from '@/lib/validate';
 import { resolveBag } from '@/lib/catalog';
 import { getStripe } from '@/lib/stripe';
@@ -97,6 +98,10 @@ export async function POST(req: Request) {
           resolved.map((r) => ({ slug: r.slug, size: r.size, qty: r.qty, unit_price_cents: r.unitPriceCents }))
         ),
         shipping_cents: String(SHIPPING_FLAT_CENTS),
+        // Attribution: tie this order back to the anonymous analytics session so
+        // the order sync can mark the cart converted + record the purchase event
+        // (closes the funnel). Never PII — just the first-party session id.
+        analytics_session: cookies().get('sa_sid')?.value ?? '',
       },
       success_url: `${base}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/#collection`,
