@@ -21,6 +21,7 @@ export function AnalyticsTrend({ trend }: { trend: TrendPoint[] }) {
     return `${x},${y}`;
   });
   const hasRevenue = trend.some((t) => t.revenueCents > 0);
+  const empty = trend.every((t) => t.visitors === 0 && t.revenueCents === 0);
 
   return (
     <div className="chart">
@@ -38,6 +39,7 @@ export function AnalyticsTrend({ trend }: { trend: TrendPoint[] }) {
         })}
         {hasRevenue && n > 1 && <polyline points={pts.join(' ')} className="chart__line" fill="none" />}
       </svg>
+      {empty && <p className="chart__empty">Aún sin datos — la tendencia se dibuja con tus primeras visitas.</p>}
       <div className="chart__axis">
         <span>{label(trend[0]?.day)}</span>
         <span>{label(trend[trend.length - 1]?.day)}</span>

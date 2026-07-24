@@ -81,6 +81,8 @@ export interface InsightsData {
   abandoned: AbandonedCart[];
   sources: SourceRow[];
   devices: SourceRow[];
+  topPages: SourceRow[];
+  topSizes: SourceRow[];
   trend: TrendPoint[];
 }
 
@@ -136,8 +138,23 @@ const EMPTY = (range: Range, configured: boolean): InsightsData => ({
   abandoned: [],
   sources: [],
   devices: [],
+  topPages: [],
+  topSizes: [],
   trend: [],
 });
+
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL'];
+
+/** Friendly label for a public path (product slugs resolve to piece names). */
+function pageLabel(path: string, names: Map<string, string>): string {
+  if (path === '/' || path === '') return 'Inicio';
+  if (path === '/collection') return 'Colección';
+  if (path === '/our-story') return 'The House';
+  if (path === '/contact') return 'Contacto';
+  const m = path.match(/^\/product\/([^/?#]+)/);
+  if (m) return names.get(m[1]) ?? m[1];
+  return path;
+}
 
 export async function adminInsights(range: Range = '30d', funnelSlug: string | null = null): Promise<InsightsData> {
   const supabase = createSSRClient();
@@ -153,7 +170,7 @@ export async function adminInsights(range: Range = '30d', funnelSlug: string | n
 
   const eventsP = supabase
     .from('analytics_events')
-    .select('session_id,event_type,product_slug,created_at')
+    .select('session_id,event_type,product_slug,size,path,created_at')
     .gte('created_at', prevFromIso)
     .limit(200_000);
 
@@ -241,6 +258,8 @@ export async function adminInsights(range: Range = '30d', funnelSlug: string | n
   // per-product analytic counts (current window)
   const viewsByslug = new Map<string, number>();
   const addByslug = new Map<string, number>();
+  const pageCounts = new Map<string, number>();
+  const sizeCounts = new Map<string, number>();
 
   for (const e of events) {
     const cur = inCur(e.created_at);
@@ -252,9 +271,17 @@ export async function adminInsights(range: Range = '30d', funnelSlug: string | n
     if (e.session_id) visitedSessions.add(e.session_id);
     const slugMatch = !funnelSlug || e.product_slug === funnelSlug;
     switch (e.event_type) {
+      case 'page_view': {
+        const key = e.path || '/';
+        pageCounts.set(key, (pageCounts.get(key) ?? 0) + 1);
+        break;
+      }
       case 'product_view':
         if (e.product_slug) viewsByslug.set(e.product_slug, (viewsByslug.get(e.product_slug) ?? 0) + 1);
         if (e.session_id && slugMatch) step.viewedProduct.add(e.session_id);
+        break;
+      case 'size_select':
+        if (e.size) sizeCounts.set(e.size, (sizeCounts.get(e.size) ?? 0) + 1);
         break;
       case 'add_to_cart':
         if (e.product_slug) addByslug.set(e.product_slug, (addByslug.get(e.product_slug) ?? 0) + 1);
@@ -368,6 +395,22 @@ export async function adminInsights(range: Range = '30d', funnelSlug: string | n
   const sources = rankRows(sourceCur, SOURCE_LABELS, visitorsCur);
   const devices = rankRows(deviceCur, DEVICE_LABELS, visitorsCur);
 
+  // --- behavior: top pages + most-selected sizes ---------------------------
+  const totalPV = [...pageCounts.values()].reduce((a, b) => a + b, 0);
+  const topPages: SourceRow[] = [...pageCounts.entries()]
+    .map(([path, count]) => ({
+      key: path,
+      label: pageLabel(path, new Map(products.map((p: any) => [p.slug, p.name]))),
+      count,
+      pct: totalPV > 0 ? Math.round((count / totalPV) * 1000) / 10 : 0,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+  const totalSizes = [...sizeCounts.values()].reduce((a, b) => a + b, 0);
+  const topSizes: SourceRow[] = SIZE_ORDER.filter((s) => sizeCounts.has(s))
+    .map((s) => ({ key: s, label: `Talla ${s}`, count: sizeCounts.get(s) ?? 0, pct: totalSizes > 0 ? Math.round(((sizeCounts.get(s) ?? 0) / totalSizes) * 1000) / 10 : 0 }))
+    .sort((a, b) => b.count - a.count);
+
   // --- trend (visitors + revenue per day/bucket) ---------------------------
   const trend = buildTrend(range, from, now, sessions, paidOrders, inCur);
 
@@ -392,6 +435,8 @@ export async function adminInsights(range: Range = '30d', funnelSlug: string | n
     abandoned: abandonedList.slice(0, 15),
     sources,
     devices,
+    topPages,
+    topSizes,
     trend,
   };
 }
